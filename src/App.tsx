@@ -723,19 +723,21 @@ export default function App() {
                 <span>{lang === 'ar' ? 'تحديد مركز الفندق:' : 'Anchor Resort Center:'}</span>
                 <div className="grid grid-cols-2 bg-slate-950 p-1 rounded-lg border border-slate-850">
                   <button 
+                    type="button"
                     onClick={() => setPositioningMode('dynamic')}
                     className={`px-3 py-1.5 rounded-md transition font-bold text-[10px] ${positioningMode === 'dynamic' ? 'bg-amber-500 text-slate-950' : 'text-slate-400 hover:text-slate-200'}`}
                   >
                     {lang === 'ar' ? 'موقعي الحالي 📍' : 'Around Me 📍'}
                   </button>
                   <button 
+                    type="button"
                     onClick={() => {
                       setPositioningMode('static');
                       setResortCenter(DEFAULT_CENTER);
                     }}
                     className={`px-3 py-1.5 rounded-md transition font-bold text-[10px] ${positioningMode === 'static' ? 'bg-amber-500 text-slate-950' : 'text-slate-400 hover:text-slate-200'}`}
                   >
-                    {lang === 'ar' ? 'دبي (افتراضي)' : 'Dubai Resort'}
+                    {lang === 'ar' ? 'المنتجع الحقيقي' : 'Real Resort'}
                   </button>
                 </div>
               </div>
@@ -744,6 +746,7 @@ export default function App() {
               <div className="flex flex-col gap-1 text-[11px] text-slate-400">
                 <span>{lang === 'ar' ? 'أزرار التحريك والتوجيه:' : 'Joystick & Mock Walks:'}</span>
                 <button
+                  type="button"
                   onClick={() => setIsMockingEnabled(!isMockingEnabled)}
                   className={`px-4 py-2 rounded-lg font-bold text-xs transition border ${
                     isMockingEnabled 
@@ -752,8 +755,8 @@ export default function App() {
                   }`}
                 >
                   {isMockingEnabled 
-                    ? (lang === 'ar' ? 'تفعيل لوحة الملاحة التجريبية (نشط)' : 'Demo Navigation Board (On)')
-                    : (lang === 'ar' ? 'تعطيل لوحة الملاحة التجريبية (مغلق)' : 'Demo Navigation Board (Off)')
+                    ? (lang === 'ar' ? 'لوحة الملاحة (مفتوح)' : 'Demo Walk (On)')
+                    : (lang === 'ar' ? 'لوحة الملاحة (مغلق)' : 'Demo Walk (Off)')
                   }
                 </button>
               </div>
@@ -761,797 +764,414 @@ export default function App() {
           </div>
         )}
 
-        {/* ========================================================
-            SCREEN 1: WELCOME & BUILDING SELECTION VIEW 
-            ======================================================== */}
         {!isNavigating && (
-          <div className="space-y-4 animate-fade-in">
+          <div className="space-y-5 animate-fade-in w-full text-right" style={{ direction: 'rtl' }}>
             
-            {/* BRAND ELITE HEADER PANEL */}
-            <div className="bg-brand-blue border border-brand-gold/25 rounded-3xl p-5 shadow-2xl overflow-hidden relative">
-              {/* Subtle background luxury glow */}
-              <div className="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 bg-brand-gold/10 rounded-full blur-3xl pointer-events-none" />
+            {/* COMPACT GOLDEN BRANDING & WELCOME BANNER */}
+            <div className="bg-gradient-to-br from-slate-900 to-brand-blue border border-brand-gold/20 rounded-3xl p-5 shadow-2xl relative overflow-hidden">
+              <div className="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 bg-brand-gold/5 rounded-full blur-3xl pointer-events-none" />
               
-              <div className="relative flex flex-col md:flex-row justify-between items-start md:items-center gap-4 text-right" style={{ direction: lang === 'ar' ? 'rtl' : 'ltr' }}>
-                <div className="space-y-1 w-full md:w-3/4">
-                  <div className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-brand-gold/15 border border-brand-gold/30 text-brand-gold text-[10px] font-semibold tracking-wider uppercase">
-                    <Sparkles className="w-3 h-3 text-brand-gold" />
-                    <span>{lang === 'ar' ? 'الرائد في توجيه الواقع المعزز لشرم الشيخ' : 'NABQ BAY, SHARM EL SHEIKH - ORIGINAL RESORTS GPS'}</span>
+              <div className="relative flex flex-col md:flex-row justify-between items-start md:items-center gap-4 text-right">
+                <div className="space-y-1">
+                  <div className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-brand-gold/15 border border-brand-gold/30 text-brand-gold text-[10px] font-bold tracking-wider">
+                    <Sparkles className="w-3 h-3 text-brand-gold animate-pulse" />
+                    <span>خليج نبق، شرم الشيخ - نظام الملاحة التفاعلي الذكي</span>
                   </div>
                   <h1 className="text-xl md:text-2xl font-extrabold text-white font-display">
-                    {lang === 'ar' ? 'تشارميليون للفنادق والمنتجعات' : 'Charmillion Hotels & Resorts'}
+                    فنادق ومنتجعات تشارميليون
                   </h1>
-                  <p className="text-slate-350 text-xs max-w-xl leading-relaxed">
-                    {lang === 'ar'
-                      ? 'مرحباً بك في تشارميليون! استكشف مباني فنادق (كلوب، لايف، جاردن) عبر خريطة الواقع المعزز الحية والـ GPS الحقيقي.'
-                      : 'Welcome to Charmillion! Access (Club, Life, Gardens) properties seamlessly via WebAR camera guidance and real coordinates mapping.'
-                    }
+                  <p className="text-slate-350 text-xs leading-relaxed max-w-xl">
+                    حدد غرفتك أو وجهتك المفضلة من التصنيفات الاحترافية المنسدلة في الأسفل، ثم انقر على زر البدء لتنشيط الكاميرا وتوجيه البوصلة السحابية والـ GPS فوراً.
                   </p>
                 </div>
                 
-                {/* Micro compass alignment */}
-                <div className="flex items-center gap-2 bg-brand-blue-light/50 border border-brand-gold/10 p-2 px-3 rounded-2xl shrink-0 font-mono text-[10px] text-brand-gold self-center">
+                {/* Compact Compass State Badge */}
+                <div className="flex items-center gap-2 bg-slate-950/80 border border-brand-gold/15 p-2 px-3 rounded-xl font-mono text-[10px] text-brand-gold self-center">
                   <Compass className="w-4 h-4 text-brand-gold animate-spin-slow" />
-                  <span>{userHeading !== null ? `${userHeading}° ${lang === 'ar' ? 'شمال' : 'N'}` : 'CALIBRATING'}</span>
+                  <span>{userHeading !== null ? `${userHeading}° شمال` : 'المستشعر جاهز'}</span>
                 </div>
               </div>
 
-              {/* TWO STUNNING REALISTIC RESORT PHOTOS SOURCED DIRECTLY */}
-              <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3" style={{ direction: lang === 'ar' ? 'rtl' : 'ltr' }}>
-                <div className="relative h-28 rounded-2xl overflow-hidden group shadow-md border border-slate-800/80">
+              {/* TWO SOURCED PHOTOGRAPHIC PREVIEWS (COMPACT) */}
+              <div className="mt-4 grid grid-cols-2 gap-3.5">
+                <div className="relative h-24 rounded-2xl overflow-hidden group shadow border border-slate-800">
                   <img 
-                    src="https://images.unsplash.com/photo-1540541338287-41700207dee6?auto=format&fit=crop&w=650&q=80" 
-                    alt="Charmillion Sea Life & Club Beachfront" 
+                    src="https://images.unsplash.com/photo-1540541338287-41700207dee6?auto=format&fit=crop&w=400&q=80" 
+                    alt="Charmillion Sea Life beach" 
                     referrerPolicy="no-referrer"
-                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                    className="w-full h-full object-cover"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-brand-blue/90 via-black/20 to-transparent flex flex-col justify-end p-2.5 text-right">
-                    <span className="text-[9px] text-brand-gold uppercase font-bold tracking-wider">
-                      {lang === 'ar' ? 'فنادق الشاطئ الكلاسيكية' : 'Beachfront Privilege'}
-                    </span>
-                    <h4 className="text-xs font-bold text-white leading-none">
-                      {lang === 'ar' ? 'تشارميليون كلوب وسي لايف' : 'Charmillion Club & Sea Life'}
-                    </h4>
+                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-transparent flex flex-col justify-end p-2">
+                    <h4 className="text-[11px] font-extrabold text-white leading-none">تشارميليون كلوب وسي لايف</h4>
+                    <span className="text-[8px] text-brand-gold">الممشي البحري والشاطئ</span>
                   </div>
                 </div>
 
-                <div className="relative h-28 rounded-2xl overflow-hidden group shadow-md border border-slate-800/80">
+                <div className="relative h-24 rounded-2xl overflow-hidden group shadow border border-slate-800">
                   <img 
-                    src="https://images.unsplash.com/photo-1582719508461-905c673771fd?auto=format&fit=crop&w=650&q=80" 
-                    alt="Charmillion Gardens Aqua Park" 
+                    src="https://images.unsplash.com/photo-1582719508461-905c673771fd?auto=format&fit=crop&w=400&q=80" 
+                    alt="Charmillion Gardens aqua park" 
                     referrerPolicy="no-referrer"
-                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                    className="w-full h-full object-cover"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-brand-blue/90 via-black/20 to-transparent flex flex-col justify-end p-2.5 text-right">
-                    <span className="text-[9px] text-brand-gold uppercase font-bold tracking-wider">
-                      {lang === 'ar' ? 'الألعاب والمدينة المائية' : 'Unilimited Slide Thrills'}
-                    </span>
-                    <h4 className="text-xs font-bold text-white leading-none">
-                      {lang === 'ar' ? 'تشارميليون جاردنز أكوا بارك' : 'Charmillion Gardens Aqua Park'}
-                    </h4>
+                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-transparent flex flex-col justify-end p-2">
+                    <h4 className="text-[11px] font-extrabold text-white leading-none">تشارميليون جاردنز أكوا بارك</h4>
+                    <span className="text-[8px] text-brand-gold">مجمع الألعاب والمدينة المائية</span>
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* FIREBASE AUTHENTICATION & CLOUD GUEST PASS PANEL */}
-            {authLoading ? (
-              <div className="bg-slate-900 border border-slate-800 rounded-3xl p-5 flex items-center justify-center gap-3 shadow-xl">
-                <Compass className="w-5 h-5 text-amber-500 animate-spin" />
-                <span className="text-xs text-slate-400 font-mono">
-                  {lang === 'ar' ? 'جاري التحقق من كارت النزيل السحابي...' : 'Authenticating cloud Guest Pass...'}
-                </span>
-              </div>
-            ) : !user ? (
-              <div className="bg-slate-900 border border-slate-800 rounded-3xl p-5 flex flex-col md:flex-row items-center justify-between gap-4 shadow-xl animate-scale-up">
-                <div className="space-y-1 text-right md:text-right w-full flex-1" style={{ direction: lang === 'ar' ? 'rtl' : 'ltr' }}>
-                  <h3 className="text-sm md:text-base font-extrabold text-white flex items-center gap-2 justify-start">
-                    <Sparkles className="w-4 h-4 text-amber-500" />
-                    {lang === 'ar' ? 'فعّل بطاقة النزيل السحابية (Firebase)' : 'Activate Your Cloud Guest Pass'}
-                  </h3>
-                  <p className="text-xs text-slate-400">
-                    {lang === 'ar'
-                      ? 'قم بتسجيل الدخول السريع لحفظ مبانيك المفضلة سحابياً، ومشاركة الزوار النصائح والملاحظات الحية، والاحتفاظ بسجل جولاتك بالواقع المعزز!'
-                      : 'Sign in to sync your favorite buildings, write active crowdsourced tips for facilities, and record your historical wayfinding logs!'
-                    }
-                  </p>
-                </div>
-                <button 
-                  onClick={loginWithGoogle}
-                  className="w-full md:w-auto px-6 py-3 bg-amber-500 text-slate-950 font-bold font-display rounded-xl hover:bg-amber-400 transition flex items-center justify-center gap-2 text-xs shadow-lg shadow-amber-500/15 cursor-pointer shrink-0 active:scale-95"
-                >
-                  <svg className="w-4 h-4 fill-current animate-pulse text-slate-950" viewBox="0 0 24 24">
-                    <path d="M12.24 10.285V13.4h6.887C18.2 15.614 15.645 18 12.24 18c-3.86 0-7-3.14-7-7s3.14-7 7-7c1.71 0 3.28.618 4.5 1.636l2.454-2.455C17.51 1.76 15.01 1 12.24 1c-5.523 0-10 4.477-10 10s4.477 10 10 10c5.782 0 9.613-4.068 9.613-9.782 0-.668-.06-1.32-.178-1.933H12.24z"/>
-                  </svg>
-                  <span>{lang === 'ar' ? 'تسجيل الدخول السريع بجوجل' : 'Sign in with Google'}</span>
-                </button>
-              </div>
-            ) : (
-              <div className="bg-slate-900 border border-slate-800 rounded-3xl p-5 shadow-xl animate-scale-up text-right space-y-4" style={{ direction: lang === 'ar' ? 'rtl' : 'ltr' }}>
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800/60 pb-3.5">
-                  <div className="flex items-center gap-3.5 justify-start">
-                    {/* User Profile Avatar with Online Status */}
-                    <div className="relative">
+            {/* COMPACT VIP GUEST CARD (FIREBASE AUTO-SYNC) */}
+            {!authLoading && (
+              <div className="bg-slate-900/40 border border-slate-850 p-3 rounded-2xl flex flex-wrap items-center justify-between gap-3 text-right">
+                {user ? (
+                  <div className="flex items-center justify-between w-full">
+                    <div className="flex items-center gap-2.5">
                       {user.photoURL ? (
                         <img 
                           src={user.photoURL} 
-                          alt="Avatar" 
+                          alt="Guest Avatar" 
                           referrerPolicy="no-referrer"
-                          className="w-12 h-12 rounded-full border-2 border-amber-500/50 object-cover" 
+                          className="w-9 h-9 rounded-full border border-amber-500/50" 
                         />
                       ) : (
-                        <div className="w-12 h-12 rounded-full border-2 border-amber-500/50 bg-slate-800 flex items-center justify-center text-amber-500 font-bold font-display text-base">
+                        <div className="w-9 h-9 rounded-full bg-slate-800 border border-amber-500/50 flex items-center justify-center text-amber-500 font-bold text-xs">
                           {guestProfile?.guestName ? guestProfile.guestName[0].toUpperCase() : 'G'}
                         </div>
                       )}
-                      <span className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-emerald-500 border-2 border-slate-900 rounded-full animate-pulse" />
-                    </div>
-
-                    <div className="space-y-0.5 text-right">
-                      <div className="flex items-center gap-1.5 justify-start">
-                        <span className="text-[10px] bg-amber-500/10 text-amber-400 px-2 py-0.5 rounded-full font-bold">
-                          {lang === 'ar' ? 'عضوية ضيف حية' : 'Live Guest Pass'}
-                        </span>
-                        {guestProfile?.roomNumber && (
-                          <span className="text-[10px] bg-slate-800 text-slate-300 px-2 py-0.5 rounded-full font-mono">
-                            {lang === 'ar' ? `غرفة رقم: ${guestProfile.roomNumber}` : `Rm: ${guestProfile.roomNumber}`}
-                          </span>
-                        )}
+                      <div className="text-right">
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-[9px] bg-amber-500/10 text-brand-gold px-1.5 py-0.2 rounded font-bold">بطاقة النزيل السحابية</span>
+                          {guestProfile?.roomNumber && <span className="text-[9px] text-slate-400">غرفة: {guestProfile.roomNumber}</span>}
+                        </div>
+                        <h4 className="text-xs font-bold text-white leading-tight">{guestProfile?.guestName || 'ضيف الغرفة'}</h4>
                       </div>
-                      
-                      {isEditingProfile ? (
-                        <div className="flex flex-wrap items-center gap-2 pt-1">
-                          <input 
-                            type="text" 
-                            value={editName}
-                            onChange={(e) => setEditName(e.target.value)}
-                            className="bg-slate-950 border border-slate-800 p-1 px-2 rounded text-xs text-white"
-                            placeholder={lang === 'ar' ? 'اسم الضيف' : "Guest's Name"}
-                          />
-                          <input 
-                            type="text" 
-                            value={editRoom}
-                            onChange={(e) => setEditRoom(e.target.value)}
-                            className="bg-slate-950 border border-slate-800 p-1 px-2 rounded text-xs text-white w-20 font-mono"
-                            placeholder={lang === 'ar' ? 'الغرفة' : 'Room#'}
-                          />
-                          <button 
-                            onClick={async () => {
-                              await updateGuestProfile(editName, editRoom);
-                              setIsEditingProfile(false);
-                            }}
-                            className="p-1 px-2.5 bg-amber-500 text-slate-950 hover:bg-amber-400 rounded text-[10px] font-bold flex items-center gap-1 cursor-pointer"
-                          >
-                            <Save className="w-3 h-3" />
-                            <span>{lang === 'ar' ? 'حفظ' : 'Save'}</span>
-                          </button>
-                        </div>
-                      ) : (
-                        <div className="flex items-center gap-1.5 justify-start">
-                          <h3 className="text-sm md:text-base font-extrabold text-white">
-                            {guestProfile?.guestName || 'Guest'}
-                          </h3>
-                          <button 
-                            onClick={() => {
-                              if (guestProfile) {
-                                setEditName(guestProfile.guestName);
-                                setEditRoom(guestProfile.roomNumber);
-                              }
-                              setIsEditingProfile(true);
-                            }}
-                            className="text-[10px] text-amber-400 hover:underline hover:text-amber-300 cursor-pointer"
-                          >
-                            {lang === 'ar' ? '[تعديل البيانات]' : '[Edit profile]'}
-                          </button>
-                        </div>
-                      )}
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <button 
+                        onClick={() => setShowHistoryModal(true)}
+                        className="px-2.5 py-1 text-[10px] bg-slate-800 hover:bg-slate-750 text-slate-300 rounded-lg flex items-center gap-1 font-bold cursor-pointer"
+                      >
+                        <History className="w-3.5 h-3.5 text-amber-500" />
+                        <span>سجل الرحلات</span>
+                      </button>
+                      <button 
+                        onClick={logoutUser}
+                        className="p-1 px-1.5 bg-red-950/40 border border-red-900/30 text-red-400 hover:bg-red-900/30 rounded-lg text-[10px] cursor-pointer"
+                        title="تسجيل الخروج"
+                      >
+                        خروج
+                      </button>
                     </div>
                   </div>
-
-                  {/* Operational widgets (History modal toggle & Signout) */}
-                  <div className="flex items-center gap-2 shrink-0 max-md:w-full max-md:justify-between border-t border-slate-800/40 md:border-t-0 pt-2 md:pt-0">
+                ) : (
+                  <div className="flex justify-between items-center w-full">
+                    <p className="text-[11px] text-slate-400">
+                      🔐 هل تود حفظ رحلاتك والمنشآت المفضلة ومشاركة النصائح؟
+                    </p>
                     <button 
-                      onClick={() => setShowHistoryModal(true)}
-                      className="px-3.5 py-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-800 border border-slate-700/50 transition text-xs font-semibold text-slate-200 flex items-center gap-1.5 cursor-pointer"
+                      onClick={loginWithGoogle}
+                      className="px-3 py-1.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold text-[10px] rounded-lg transition-transform active:scale-95 cursor-pointer flex items-center gap-1"
                     >
-                      <History className="w-4 h-4 text-amber-500" />
-                      <span>{lang === 'ar' ? 'سجل الملاحة' : 'Log History'}</span>
-                    </button>
-                    
-                    <button 
-                      onClick={logoutUser}
-                      className="p-2 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 hover:text-red-300 transition text-xs font-bold cursor-pointer"
-                      title={lang === 'ar' ? 'تسجيل الخروج' : 'Log Out'}
-                    >
-                      <LogOut className="w-4 h-4" />
+                      <span>تفعيل كارت النزيل</span>
                     </button>
                   </div>
-                </div>
+                )}
               </div>
             )}
 
-            {/* SELECTION INTERACTIVE ENGINE (CARD SELECTOR) */}
-            <div className="space-y-4" style={{ direction: lang === 'ar' ? 'rtl' : 'ltr' }}>
-              
-              {/* TOP HUB: DUAL-MODE MAPS AND PROPERTY CLASSIFICATION TITLE */}
-              <div className="bg-slate-900/60 p-4 border border-slate-850 rounded-2xl space-y-4">
-                
-                <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-3 pb-2 border-b border-slate-800/60">
-                  <div className="space-y-0.5 text-right">
-                    <h3 className="text-sm font-extrabold text-white flex items-center gap-1.5 justify-start">
-                      <Layers className="w-4 h-4 text-brand-gold" />
-                      {lang === 'ar' ? 'تصنيف المنتجعات وخرائط الإرشاد' : 'Property Classifications & Maps'}
-                    </h3>
-                    <p className="text-[11px] text-slate-400">
-                      {lang === 'ar' 
-                        ? 'تشارميليون تضم ٣ فنادق في مجمع واحد. تصفح الخريطة التخطيطية وخريطة جوجل لمعاينة مواقع الأبنية ديلوكس ولاند سكيب بالـ GPS:'
-                        : 'Charmillion encompasses 3 elite resorts. Filter by hotel property and preview actual GPS locations:'
-                      }
-                    </p>
-                  </div>
+            {/* THE PROFESSIONAL CASCADING ACCORDION SELECTOR */}
+            <div className="space-y-2.5">
+              <label className="text-[11px] uppercase tracking-wider text-slate-400 font-extrabold block mb-1">
+                اختر مكاناً أو مبنى فندقياً من القوائم الاحترافية المنسدلة:
+              </label>
 
-                  {/* SEARCH FIELD */}
-                  <div className="relative w-full md:w-64">
-                    <Search className="absolute right-3 top-2 w-3.5 h-3.5 text-slate-500" />
-                    <input 
-                      type="text" 
-                      placeholder={lang === 'ar' ? 'ابحث عن مبنى أو ورقم غرفة...' : 'Search Room block, burger, pool...'}
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      className="w-full pl-3 pr-8 py-1 bg-slate-950 border border-slate-800 focus:border-brand-gold focus:outline-none rounded-xl text-xs text-slate-100 placeholder-slate-500 transition"
-                    />
-                    {searchQuery && (
-                      <button onClick={() => setSearchQuery('')} className="absolute left-3 top-1.5 text-slate-400 hover:text-white">
-                        <X className="w-3.5 h-3.5" />
-                      </button>
-                    )}
-                  </div>
-                </div>
-
-                {/* 1. PROPERTY CLASSIFICATION SWITCH - CLUB, LIFE, GARDENS */}
-                <div className="space-y-1.5">
-                  <label className="text-[10px] uppercase tracking-wider text-slate-400 font-bold block text-right">
-                    {lang === 'ar' ? 'اختر المنتجع لتصفية الأبنية (تسهيل التصنيف):' : 'Select Resort Property (Classification):'}
-                  </label>
-                  <div className="flex flex-wrap items-center gap-1.5">
-                    <button
-                      onClick={() => { setActiveResort('all'); setSelectedBuilding(null); }}
-                      className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1 cursor-pointer ${activeResort === 'all' ? 'bg-brand-gold text-slate-950 font-extrabold shadow-lg' : 'bg-slate-950 text-slate-400 hover:text-slate-200'}`}
-                    >
-                      <span>✨</span>
-                      <span>{lang === 'ar' ? 'جميع المنتجعات' : 'All Charmillion'}</span>
-                    </button>
-                    
-                    <button
-                      onClick={() => { setActiveResort('club'); setSelectedBuilding(null); }}
-                      className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${activeResort === 'club' ? 'bg-red-500/20 text-red-400 border border-red-500/45 font-extrabold shadow-lg shadow-red-500/5' : 'bg-slate-950 text-slate-400 hover:text-slate-200'}`}
-                    >
-                      <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
-                      <span>{lang === 'ar' ? 'كلوب ريزورت (٥ نجوم)' : 'Club Resort'}</span>
-                    </button>
-
-                    <button
-                      onClick={() => { setActiveResort('life'); setSelectedBuilding(null); }}
-                      className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${activeResort === 'life' ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/40 font-extrabold shadow-lg shadow-cyan-500/5' : 'bg-slate-950 text-slate-400 hover:text-slate-200'}`}
-                    >
-                      <span className="w-2 h-2 rounded-full bg-cyan-500 animate-pulse" />
-                      <span>{lang === 'ar' ? 'سي لايف (٤ نجوم)' : 'Sea Life Resort'}</span>
-                    </button>
-
-                    <button
-                      onClick={() => { setActiveResort('gardens'); setSelectedBuilding(null); }}
-                      className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${activeResort === 'gardens' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 font-extrabold shadow-lg shadow-emerald-500/10' : 'bg-slate-950 text-slate-400 hover:text-slate-200'}`}
-                    >
-                      <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                      <span>{lang === 'ar' ? 'جاردنز أكوا (٤ نجوم+ )' : 'Gardens Aqua Park'}</span>
-                    </button>
-
-                    <button
-                      onClick={() => { setActiveResort('general'); setSelectedBuilding(null); }}
-                      className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${activeResort === 'general' ? 'bg-amber-400/20 text-amber-300 border border-amber-500/30' : 'bg-slate-950 text-slate-400 hover:text-slate-200'}`}
-                    >
-                      <span className="w-2 h-2 rounded-full bg-amber-400" />
-                      <span>{lang === 'ar' ? 'أماكن عامة مشتركة' : 'Shared Areas'}</span>
-                    </button>
-                  </div>
-                </div>
-
-                {/* 2. DUAL-MAP TABS - SCHEMATIC vs GOOGLE MAPS */}
-                <div className="flex bg-slate-950 p-1 rounded-xl border border-slate-800">
-                  <button 
-                    onClick={() => setMapMode('internal')}
-                    className={`flex-1 py-2 text-xs font-bold rounded-lg transition flex items-center justify-center gap-1.5 cursor-pointer ${mapMode === 'internal' ? 'bg-brand-gold text-slate-950' : 'text-slate-400 hover:text-slate-200'}`}
-                  >
-                    <Layers className="w-3.5 h-3.5" />
-                    <span>{lang === 'ar' ? 'مخطط الفندق الداخلي التفاعلي' : 'Local Schematic Board'}</span>
-                  </button>
-                  <button 
-                    onClick={() => setMapMode('google')}
-                    className={`flex-1 py-2 text-xs font-bold rounded-lg transition flex items-center justify-center gap-1.5 cursor-pointer ${mapMode === 'google' ? 'bg-brand-gold text-slate-950' : 'text-slate-400 hover:text-slate-200'}`}
-                  >
-                    <MapPin className="w-3.5 h-3.5" />
-                    <span>{lang === 'ar' ? 'خرائط جوجل العامة (GPS)' : 'Google Maps Location'}</span>
-                  </button>
-                </div>
-
-                {/* 3. DYNAMIC CONTENT AREA BASED ON MAP MODE */}
-                {mapMode === 'internal' ? (
-                  <div className="relative h-60 bg-slate-950 border border-slate-850 rounded-2xl overflow-hidden p-2 flex flex-col justify-between shadow-inner select-none font-sans" style={{ direction: 'rtl' }}>
-                    {/* Sand Beach & Sea Gradient Landscape Background Layout representing Nabq Bay beachfront */}
-                    <div className="absolute inset-0 flex">
-                      {/* Left Side: Gardens Aqua park (Inland, grass & dunes) */}
-                      <div className="w-1/3 h-full bg-gradient-to-r from-emerald-950/20 to-slate-950/10 border-r border-slate-900" />
-                      
-                      {/* Center: Sea Life & central pools (Sand Gold) */}
-                      <div className="w-1/3 h-full bg-gradient-to-b from-brand-blue-light/5 via-slate-950 to-brand-blue-light/10" />
-                      
-                      {/* Right-Side Edge: Deep blue Sea Coast and Wooden jetty */}
-                      <div className="w-1/3 h-full bg-gradient-to-l from-cyan-950/25 to-transparent relative">
-                        {/* Styled Coral Reef label */}
-                        <div className="absolute right-2 top-2 origin-top-right text-[8px] tracking-widest text-[#4faef2]/40 font-bold select-none rotate-90">
-                          {lang === 'ar' ? 'البحر الأحمر - حدائق تيران المرجانية' : 'RED SEA CORAL SHORE'}
-                        </div>
-                      </div>
+              {/* 1. CLUB HOTEL ACCORDION SECTION */}
+              <div className="bg-slate-900/60 border border-slate-850 rounded-2xl overflow-hidden shadow">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setActiveResort(activeResort === 'club' ? 'all' : 'club');
+                  }}
+                  className={`w-full p-4 flex items-center justify-between text-right font-display cursor-pointer transition ${
+                    activeResort === 'club' ? 'bg-amber-500/10 border-b border-slate-800' : 'hover:bg-slate-850/30'
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-xl bg-red-500/15 border border-red-500/30 text-red-400">
+                      <BuildingIcon className="w-4 h-4" />
                     </div>
-
-                    {/* Stylized visual map highlights */}
-                    <div className="absolute bottom-2 left-2 text-[9px] text-slate-500 font-mono flex flex-col gap-0.5 text-left bg-slate-900/80 p-2 rounded-xl border border-slate-800 z-10">
-                      <div>🗺️ {lang === 'ar' ? 'تخطيط تشارميليون' : 'Charmillion Plan'}</div>
-                      <div className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-red-500" />{lang === 'ar' ? 'كلوب' : 'Club'}</div>
-                      <div className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-cyan-500" />{lang === 'ar' ? 'سي لايف' : 'Sea Life'}</div>
-                      <div className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-emerald-500" />{lang === 'ar' ? 'جاردنز أكوا' : 'Gardens'}</div>
+                    <div>
+                      <h3 className="text-xs md:text-sm font-extrabold text-white">فندق تشارميليون كلوب ريزورت (٥ نجوم)</h3>
+                      <p className="text-[10px] text-slate-400 font-sans">تشمل مباني الإقامة الفندقية ومبنى الاستقبال والغرف الخاصة</p>
                     </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[9.5px] font-mono font-bold bg-slate-950 text-slate-400 px-2 py-0.5 rounded-full border border-slate-800">10 مباني</span>
+                    <span className={`text-slate-400 transition-transform duration-200 ${activeResort === 'club' ? 'rotate-90 text-brand-gold' : ''}`}>◀</span>
+                  </div>
+                </button>
 
-                    {/* MAP SCALE RENDER (PLOTTING DOTS INTERACTIVELY) */}
-                    <div className="absolute inset-5">
-                      {/* Display Shore jetty line sketch */}
-                      <div className="absolute right-0 top-1/4 w-12 h-0.5 bg-brand-gold/40 border-t border-dashed border-brand-gold/25" title="Resort Jetty Line" />
-
-                      {BUILDINGS.map((b) => {
-                        // Plot coordinates
-                        // offsetX range roughly -180 to 210 -> relative percentage
-                        const leftPercent = ((b.offsetX - (-190)) / 410) * 100;
-                        // offsetY range roughly -120 to 160 -> relative percentage
-                        const topPercent = 100 - (((b.offsetY - (-120)) / 280) * 100);
-                        
-                        const isSelected = selectedBuilding?.id === b.id;
-                        const matchSearch = searchQuery ? (
-                          b.nameAr.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                          b.nameEn.toLowerCase().includes(searchQuery.toLowerCase())
-                        ) : true;
-                        
-                        const matchResort = activeResort === 'all' ? true : b.resort === activeResort;
-                        
-                        // Resort Color codes
-                        let dotColor = "bg-amber-400 border-amber-300";
-                        if (b.resort === 'club') dotColor = "bg-red-500 border-red-300";
-                        if (b.resort === 'life') dotColor = "bg-cyan-500 border-cyan-300";
-                        if (b.resort === 'gardens') dotColor = "bg-emerald-500 border-emerald-300";
-
-                        const isHighlighted = matchResort && matchSearch;
-
-                        return (
-                          <button
-                            key={b.id}
-                            style={{ 
-                              left: `${leftPercent}%`, 
-                              top: `${topPercent}%`,
-                              transform: 'translate(-50%, -50%)'
-                            }}
-                            onClick={() => setSelectedBuilding(b)}
-                            className={`absolute w-3.5 h-3.5 rounded-full border-2 transition-all duration-300 cursor-pointer flex items-center justify-center ${dotColor} ${
-                              isSelected 
-                                ? 'scale-150 ring-4 ring-brand-gold animate-bounce z-30' 
-                                : isHighlighted 
-                                  ? 'scale-100 hover:scale-125 z-20 opacity-100' 
-                                  : 'scale-75 opacity-20'
-                            }`}
-                            title={lang === 'ar' ? b.nameAr : b.nameEn}
-                          >
-                            {isSelected && <span className="w-1.5 h-1.5 bg-slate-950 rounded-full" />}
-                          </button>
-                        );
-                      })}
-
-                      {/* PULSING LIVE USER GPS OVERLAY SIMULATOR */}
-                      {currentCoords && (
-                        <div 
-                          style={{
-                            // user current coords relative position
-                            left: '50%',
-                            top: '60%',
-                            transform: 'translate(-50%, -50%)'
-                          }}
-                          className="absolute z-20 pointer-events-none"
+                {activeResort === 'club' && (
+                  <div className="p-3.5 bg-slate-950/45 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 border-t border-slate-900 animate-slide-down">
+                    {BUILDINGS.filter(b => b.resort === 'club').map((b) => {
+                      const isSelected = selectedBuilding?.id === b.id;
+                      return (
+                        <div
+                          key={b.id}
+                          onClick={() => setSelectedBuilding(b)}
+                          className={`p-3 rounded-xl border text-right cursor-pointer select-none transition-all duration-200 flex flex-col justify-between ${
+                            isSelected 
+                              ? 'bg-amber-500/10 border-amber-500 shadow-md shadow-amber-500/5 ring-1 ring-amber-500/30' 
+                              : 'bg-slate-900/40 border-slate-850 hover:border-slate-800 hover:bg-slate-900/80'
+                          }`}
                         >
-                          <div className="w-4 h-4 bg-blue-500 rounded-full border-2 border-white flex items-center justify-center shadow-lg animate-pulse" />
-                          <div className="absolute -inset-2 rounded-full border border-blue-400 bg-blue-500/20 animate-ping" />
-                          <span className="absolute -bottom-4 right-1/2 translate-x-1/2 whitespace-nowrap text-[8px] bg-slate-900 border border-blue-500/40 text-blue-400 font-bold px-1.5 py-0.5 rounded-full font-mono shadow-md uppercase">
-                            {lang === 'ar' ? 'موقع الملاحة الحالية' : 'GPS POSITION'}
-                          </span>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Schematic footer caption */}
-                    <div className="text-[10px] text-slate-400 font-mono text-center z-10 bg-slate-900/45 p-1 rounded-b-xl border-t border-slate-800/20">
-                      {selectedBuilding ? (
-                        <span className="text-brand-gold font-bold">
-                          {lang === 'ar' ? `📍 تم التدبيس: ${selectedBuilding.nameAr}` : `📍 Pinned: ${selectedBuilding.nameEn}`} (X: {selectedBuilding.offsetX}m, Y: {selectedBuilding.offsetY}m)
-                        </span>
-                      ) : (
-                        <span>🧭 {lang === 'ar' ? 'انقر على الدوائر الملونة لمشاهدة وتحديد أماكن الغرف والمطاعم' : 'Click the colored markers to locate room blocks & restaurants'}</span>
-                      )}
-                    </div>
-                  </div>
-                ) : (
-                  // GOOGLE MAPS CO-ALIGNMENT PORTAL (REAL LOCATION MAPPING)
-                  <div className="relative bg-slate-950 border border-slate-850 p-4 rounded-2xl md:h-60 flex flex-col justify-between text-right space-y-4" style={{ direction: lang === 'ar' ? 'rtl' : 'ltr' }}>
-                    <div className="flex flex-col md:flex-row items-start justify-between gap-4">
-                      <div className="space-y-1.5 flex-grow">
-                        <h4 className="text-xs font-extrabold text-brand-gold uppercase tracking-wider flex items-center gap-1 justify-start">
-                          <MapPin className="w-3.5 h-3.5 text-brand-gold animate-bounce" />
-                          {lang === 'ar' ? 'خرائط وجي بي إس فندق تشارميليون الأصلي' : 'REDUCE POSITION ON GOOGLE MAPS GPS'}
-                        </h4>
-                        <p className="text-[11px] text-slate-300 leading-relaxed">
-                          {lang === 'ar'
-                            ? 'يقع منتجع تشارميليون الفعلي في خليج نبق بمدينة شرم الشيخ المطلة على جزيرة تيران بمضيق تيران.'
-                            : 'The physical Charmillion Resort spans along the Nabq Bay, Sharm El Sheikh coordinates for complete oceanic wayfinding.'
-                          }
-                        </p>
-                        <div className="text-[11.5px] text-slate-400 font-mono bg-slate-900/60 p-2.5 rounded-xl border border-slate-850 space-y-1">
-                          <div>
-                            {lang === 'ar' ? '📍 إحداثيات الفندق (Center):' : '🏨 Center Latitude/Longitude:'}{' '}
-                            <strong className="text-white">27.9987554, 34.4319008</strong>
+                          <div className="flex items-center justify-between gap-1.5">
+                            <span className="text-[8px] bg-slate-950 text-slate-500 px-1.5 py-0.2 rounded font-mono font-bold">كلوب</span>
+                            {isSelected && <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />}
                           </div>
-                          {selectedBuilding && (
-                            <div className="text-brand-gold border-t border-slate-800/40 pt-1 mt-1">
-                              {lang === 'ar' ? '🎯 الإحداثي الدقيق للمبنى المحدد:' : '🎯 Precise Target Coordinates:'}{' '}
-                              <strong className="text-white">
-                                {getCoordinatesFromOffsets(DEFAULT_CENTER.lat, DEFAULT_CENTER.lon, selectedBuilding.offsetX, selectedBuilding.offsetY).lat.toFixed(7)},{' '}
-                                {getCoordinatesFromOffsets(DEFAULT_CENTER.lat, DEFAULT_CENTER.lon, selectedBuilding.offsetX, selectedBuilding.offsetY).lon.toFixed(7)}
-                              </strong>
-                            </div>
-                          )}
+                          <h4 className={`text-xs font-bold leading-tight mt-1.5 truncate ${isSelected ? 'text-amber-400' : 'text-slate-200'}`}>
+                            {b.nameAr}
+                          </h4>
                         </div>
-                      </div>
-
-                      {/* Small visual mock map widget representing the Google maps preview */}
-                      <div className="w-full md:w-44 h-24 bg-slate-900 rounded-xl border border-slate-800 flex items-center justify-center relative overflow-hidden shrink-0 shadow-inner">
-                        {/* Static beach/sand vector or stylish minimal SVG map icon represent physical layout */}
-                        <Compass className="w-12 h-12 text-slate-800 absolute opacity-30 animate-pulse" />
-                        <span className="text-[10px] font-mono font-bold text-slate-500 z-10 text-center p-2 uppercase">
-                          {lang === 'ar' ? 'احصل على الاتجاهات بالـ GPS' : 'Get Real-World GPS Directions'}
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* REDIRECTION DIRECT TO USER ACTIONS */}
-                    <div className="flex flex-col sm:flex-row gap-2">
-                      <a 
-                        href={selectedBuilding 
-                          ? `https://www.google.com/maps/search/?api=1&query=${getCoordinatesFromOffsets(DEFAULT_CENTER.lat, DEFAULT_CENTER.lon, selectedBuilding.offsetX, selectedBuilding.offsetY).lat},${getCoordinatesFromOffsets(DEFAULT_CENTER.lat, DEFAULT_CENTER.lon, selectedBuilding.offsetX, selectedBuilding.offsetY).lon}` 
-                          : "https://www.google.com/maps/@27.9987554,34.4319008,480m"
-                        }
-                        target="_blank"
-                        rel="noreferrer"
-                        className="flex-1 py-3 text-xs bg-slate-900 hover:bg-slate-850 text-brand-gold border border-brand-gold/30 rounded-xl font-bold transition flex items-center justify-center gap-1.5 cursor-pointer shadow-md text-center"
-                      >
-                        <ExternalLink className="w-3.5 h-3.5" />
-                        <span>
-                          {selectedBuilding
-                            ? (lang === 'ar' ? `فتح (${lang === 'ar' ? selectedBuilding.nameAr : selectedBuilding.nameEn}) في خرائط جوجل` : `Open ${selectedBuilding.nameEn} on Google Maps`)
-                            : (lang === 'ar' ? 'افتح موقع فندق تشارميليون في خرائط جوجل' : 'Open Charmillion Resorts on Google Maps')
-                          }
-                        </span>
-                      </a>
-                    </div>
+                      );
+                    })}
                   </div>
                 )}
               </div>
 
-              {/* THREE: CATEGORY FILTER ROW UNDER THE MAP FOR MULTI-LEVEL QUERY */}
-              <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-hide">
-                <button 
-                  onClick={() => setActiveCategory('all')}
-                  className={`px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all duration-200 shrink-0 ${activeCategory === 'all' ? 'bg-amber-500 text-slate-950 shadow-md' : 'bg-slate-900 text-slate-400 hover:text-white hover:bg-slate-800'}`}
+              {/* 2. LIFE HOTEL ACCORDION SECTION */}
+              <div className="bg-slate-900/60 border border-slate-850 rounded-2xl overflow-hidden shadow">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setActiveResort(activeResort === 'life' ? 'all' : 'life');
+                  }}
+                  className={`w-full p-4 flex items-center justify-between text-right font-display cursor-pointer transition ${
+                    activeResort === 'life' ? 'bg-amber-500/10 border-b border-slate-800' : 'hover:bg-slate-850/30'
+                  }`}
                 >
-                  {lang === 'ar' ? 'الكل' : 'All Category'}
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-xl bg-cyan-500/15 border border-cyan-500/30 text-cyan-400">
+                      <Compass className="w-4 h-4 animate-spin-slow" />
+                    </div>
+                    <div>
+                      <h3 className="text-xs md:text-sm font-extrabold text-white">فندق تشارميليون سي لايف ريزورت (٤ نجوم)</h3>
+                      <p className="text-[10px] text-slate-400 font-sans">تشمل المباني الفندقية ٢٣ مبنى منسقاً بالممرات المؤدية مباشرة للبحر</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[9.5px] font-mono font-bold bg-slate-950 text-slate-400 px-2 py-0.5 rounded-full border border-slate-800">23 مبنى</span>
+                    <span className={`text-slate-400 transition-transform duration-200 ${activeResort === 'life' ? 'rotate-90 text-brand-gold' : ''}`}>◀</span>
+                  </div>
                 </button>
-                {user && (
-                  <button 
-                    onClick={() => setActiveCategory('favorites')}
-                    className={`px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all duration-200 flex items-center gap-1.5 shrink-0 ${activeCategory === 'favorites' ? 'bg-amber-500 text-slate-950 shadow-md' : 'bg-slate-900 text-slate-400 hover:text-white hover:bg-slate-800'}`}
-                  >
-                    <Star className={`w-3.5 h-3.5 ${activeCategory === 'favorites' ? 'fill-slate-950 text-slate-950' : 'fill-amber-500 text-amber-500'}`} />
-                    <span>{lang === 'ar' ? `المفضلة (${guestProfile?.favoriteBuildings?.length || 0})` : `Favorites (${guestProfile?.favoriteBuildings?.length || 0})`}</span>
-                  </button>
+
+                {activeResort === 'life' && (
+                  <div className="p-3.5 bg-slate-950/45 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 border-t border-slate-900 max-h-[40vh] overflow-y-auto animate-slide-down pr-1">
+                    {BUILDINGS.filter(b => b.resort === 'life').map((b) => {
+                      const isSelected = selectedBuilding?.id === b.id;
+                      return (
+                        <div
+                          key={b.id}
+                          onClick={() => setSelectedBuilding(b)}
+                          className={`p-3 rounded-xl border text-right cursor-pointer select-none transition-all duration-200 flex flex-col justify-between ${
+                            isSelected 
+                              ? 'bg-amber-500/10 border-amber-500 shadow-md shadow-amber-500/5 ring-1 ring-amber-500/30' 
+                              : 'bg-slate-900/40 border-slate-850 hover:border-slate-800 hover:bg-slate-900/80'
+                          }`}
+                        >
+                          <div className="flex items-center justify-between gap-1.5">
+                            <span className="text-[8px] bg-slate-950 text-slate-500 px-1.5 py-0.2 rounded font-mono font-bold">لايف</span>
+                            {isSelected && <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />}
+                          </div>
+                          <h4 className={`text-xs font-bold leading-tight mt-1.5 truncate ${isSelected ? 'text-amber-400' : 'text-slate-200'}`}>
+                            {b.nameAr}
+                          </h4>
+                        </div>
+                      );
+                    })}
+                  </div>
                 )}
-                <button 
-                  onClick={() => setActiveCategory('rooms')}
-                  className={`px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all duration-200 flex items-center gap-1 shrink-0 ${activeCategory === 'rooms' ? 'bg-amber-500 text-slate-950' : 'bg-slate-900 text-slate-400 hover:text-white hover:bg-slate-800'}`}
-                >
-                  <BuildingIcon className="w-3.5 h-3.5" />
-                  {lang === 'ar' ? 'أجنحة وغرف' : 'Rooms & Suites'}
-                </button>
-                <button 
-                  onClick={() => setActiveCategory('dining')}
-                  className={`px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all duration-200 flex items-center gap-1 shrink-0 ${activeCategory === 'dining' ? 'bg-amber-500 text-slate-950' : 'bg-slate-900 text-slate-400 hover:text-white hover:bg-slate-800'}`}
-                >
-                  <Utensils className="w-3.5 h-3.5" />
-                  {lang === 'ar' ? 'مطاعم وأغذية' : 'Dining & Cafes'}
-                </button>
-                <button 
-                  onClick={() => setActiveCategory('recreation')}
-                  className={`px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all duration-200 flex items-center gap-1 shrink-0 ${activeCategory === 'recreation' ? 'bg-amber-500 text-slate-950' : 'bg-slate-900 text-slate-400 hover:text-white hover:bg-slate-800'}`}
-                >
-                  <Sparkles className="w-3.5 h-3.5" />
-                  {lang === 'ar' ? 'شواطئ ومسابح كبرى' : 'Beaches & Pools'}
-                </button>
-                <button 
-                  onClick={() => setActiveCategory('sports')}
-                  className={`px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all duration-200 flex items-center gap-1 shrink-0 ${activeCategory === 'sports' ? 'bg-amber-500 text-slate-950' : 'bg-slate-900 text-slate-400 hover:text-white hover:bg-slate-800'}`}
-                >
-                  <Compass className="w-3.5 h-3.5" />
-                  {lang === 'ar' ? 'ملاعب ورياضة' : 'Gyms & Courts'}
-                </button>
-                <button 
-                  onClick={() => setActiveCategory('services')}
-                  className={`px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all duration-200 flex items-center gap-1 shrink-0 ${activeCategory === 'services' ? 'bg-amber-500 text-slate-950' : 'bg-slate-900 text-slate-400 hover:text-white hover:bg-slate-800'}`}
-                >
-                  <Layers className="w-3.5 h-3.5" />
-                  {lang === 'ar' ? 'مرافق وخدمات' : 'Facilities & Services'}
-                </button>
               </div>
 
-              {/* GRID OF THE 50 BUILDINGS */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 max-h-[50vh] overflow-y-auto pr-1">
-                {filteredBuildings.length > 0 ? (
-                  filteredBuildings.map((b) => {
-                    const isSelected = selectedBuilding?.id === b.id;
-                    
-                    // Estimate localized relative distance
-                    let estMeters = Math.hypot(b.offsetX, b.offsetY);
-                    
-                    // If currentCoords exists, compute exact geodesic distance from user's simulated center
-                    if (currentCoords) {
-                      const latLon = getCoordinatesFromOffsets(resortCenter.lat, resortCenter.lon, b.offsetX, b.offsetY);
-                      estMeters = getHaversineDistance(currentCoords.lat, currentCoords.lon, latLon.lat, latLon.lon);
-                    }
+              {/* 3. GARDENS HOTEL ACCORDION SECTION */}
+              <div className="bg-slate-900/60 border border-slate-850 rounded-2xl overflow-hidden shadow">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setActiveResort(activeResort === 'gardens' ? 'all' : 'gardens');
+                  }}
+                  className={`w-full p-4 flex items-center justify-between text-right font-display cursor-pointer transition ${
+                    activeResort === 'gardens' ? 'bg-amber-500/10 border-b border-slate-800' : 'hover:bg-slate-850/30'
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-400">
+                      <Sparkles className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <h3 className="text-xs md:text-sm font-extrabold text-white">فندق تشارميليون جاردنز ريزورت (٤ نجوم+)</h3>
+                      <p className="text-[10px] text-slate-400 font-sans">تشمل مباني الإقامة السبعة المجاورة لمدينة الألعاب السلايدر المائية</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[9.5px] font-mono font-bold bg-slate-950 text-slate-400 px-2 py-0.5 rounded-full border border-slate-800">7 مباني</span>
+                    <span className={`text-slate-400 transition-transform duration-200 ${activeResort === 'gardens' ? 'rotate-90 text-brand-gold' : ''}`}>◀</span>
+                  </div>
+                </button>
 
-                    return (
-                      <div 
-                        key={b.id}
-                        id={`b-${b.id}`}
-                        onClick={() => setSelectedBuilding(b)}
-                        className={`group relative p-4 rounded-2xl border text-right cursor-pointer select-none transition-all duration-300 ${
-                          isSelected 
-                            ? 'bg-amber-500/10 border-amber-500 ring-2 ring-amber-500/30 shadow-lg shadow-amber-500/5' 
-                            : 'bg-slate-900/40 border-slate-800 hover:border-slate-700 hover:bg-slate-900/80 shadow'
-                        }`}
-                      >
-                        <div className="flex items-start justify-between gap-2.5">
-                          {/* Left-side Category Indicator Icon & Index badge */}
-                          <div className="flex flex-col items-center gap-1 shrink-0">
-                            <span className="text-[10px] bg-slate-950 text-slate-400 px-2 py-0.5 rounded-full font-mono font-bold">
-                              #{b.id}
-                            </span>
-                            <div className={`p-2 rounded-xl transition ${isSelected ? 'bg-amber-500 text-slate-950' : 'bg-slate-800 text-slate-300'}`}>
-                              {b.type === 'rooms' && <BuildingIcon className="w-4 h-4" />}
-                              {b.type === 'dining' && <Utensils className="w-4 h-4" />}
-                              {b.type === 'recreation' && <Sparkles className="w-4 h-4" />}
-                              {b.type === 'sports' && <Activity className="w-4 h-4" />}
-                              {b.type === 'services' && <Layers className="w-4 h-4" />}
-                            </div>
+                {activeResort === 'gardens' && (
+                  <div className="p-3.5 bg-slate-950/45 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 border-t border-slate-900 animate-slide-down">
+                    {BUILDINGS.filter(b => b.resort === 'gardens').map((b) => {
+                      const isSelected = selectedBuilding?.id === b.id;
+                      return (
+                        <div
+                          key={b.id}
+                          onClick={() => setSelectedBuilding(b)}
+                          className={`p-3 rounded-xl border text-right cursor-pointer select-none transition-all duration-200 flex flex-col justify-between ${
+                            isSelected 
+                              ? 'bg-amber-500/10 border-amber-500 shadow-md shadow-amber-500/5 ring-1 ring-amber-500/30' 
+                              : 'bg-slate-900/40 border-slate-850 hover:border-slate-800 hover:bg-slate-900/80'
+                          }`}
+                        >
+                          <div className="flex items-center justify-between gap-1.5">
+                            <span className="text-[8px] bg-slate-950 text-slate-500 px-1.5 py-0.2 rounded font-mono font-bold">جاردنز</span>
+                            {isSelected && <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />}
                           </div>
-
-                          {/* Right-side Description Texts */}
-                          <div className="flex-1 space-y-1 overflow-hidden" style={{ direction: lang === 'ar' ? 'rtl' : 'ltr' }}>
-                            <div className="flex items-center gap-1 flex-wrap justify-start">
-                              {b.resort === 'club' && <span className="text-[8px] bg-red-500/15 text-red-400 border border-red-500/20 px-1.5 py-0.5 rounded-md font-extrabold">{lang === 'ar' ? 'كلوب ٥⭐' : 'Club 5⭐'}</span>}
-                              {b.resort === 'life' && <span className="text-[8px] bg-cyan-500/15 text-cyan-400 border border-cyan-500/20 px-1.5 py-0.5 rounded-md font-extrabold">{lang === 'ar' ? 'سي لايف ٤⭐' : 'Sea Life 4⭐'}</span>}
-                              {b.resort === 'gardens' && <span className="text-[8px] bg-emerald-500/15 text-emerald-400 border border-emerald-500/20 px-1.5 py-0.5 rounded-md font-extrabold">{lang === 'ar' ? 'جاردنز ٤⭐' : 'Gardens 4⭐'}</span>}
-                              {b.resort === 'general' && <span className="text-[8px] bg-amber-400/15 text-amber-300 border border-amber-500/25 px-1.5 py-0.5 rounded-md font-extrabold">{lang === 'ar' ? 'مشترك' : 'Shared'}</span>}
-                            </div>
-                            <h4 className={`text-xs md:text-sm font-bold truncate transition ${isSelected ? 'text-amber-400' : 'text-white'}`}>
-                              {lang === 'ar' ? b.nameAr : b.nameEn}
-                            </h4>
-                            <p className="text-[10px] text-slate-400 line-clamp-1">
-                              {lang === 'ar' ? b.descriptionAr : b.descriptionEn}
-                            </p>
-                          </div>
+                          <h4 className={`text-xs font-bold leading-tight mt-1.5 truncate ${isSelected ? 'text-amber-400' : 'text-slate-200'}`}>
+                            {b.nameAr}
+                          </h4>
                         </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
 
-                        {/* BOTTOM DETAILS - DISTANCE & LOCATION MOCK OFFSETS */}
-                        <div className="mt-3 pt-2.5 border-t border-slate-850 flex items-center justify-between text-[10px] text-slate-400 font-mono">
-                          <div className="flex items-center gap-1 bg-slate-950 px-2 py-0.5 rounded-md text-amber-500 font-bold">
-                            <MapPin className="w-3 h-3" />
-                            <span>{formatDistance(estMeters, lang === 'ar')}</span>
+              {/* 4. PUBLIC & SHARED ACCORDION SECTION */}
+              <div className="bg-slate-900/60 border border-slate-850 rounded-2xl overflow-hidden shadow">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setActiveResort(activeResort === 'general' ? 'all' : 'general');
+                  }}
+                  className={`w-full p-4 flex items-center justify-between text-right font-display cursor-pointer transition ${
+                    activeResort === 'general' ? 'bg-amber-500/10 border-b border-slate-800' : 'hover:bg-slate-850/30'
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-xl bg-amber-500/15 border border-amber-500/30 text-amber-400">
+                      <Layers className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <h3 className="text-xs md:text-sm font-extrabold text-white">الخدمات المشتركة والأماكن العامة بالفندق</h3>
+                      <p className="text-[10px] text-slate-400 font-sans">تشمل شاطئ البحر، المركز الصحي، ملاعب التنس الكلاسيكية، بهو الاستقبال والمارينا</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[9.5px] font-mono font-bold bg-slate-950 text-slate-400 px-2 py-0.5 rounded-full border border-slate-800">6 مرافق</span>
+                    <span className={`text-slate-400 transition-transform duration-200 ${activeResort === 'general' ? 'rotate-90 text-brand-gold' : ''}`}>◀</span>
+                  </div>
+                </button>
+
+                {activeResort === 'general' && (
+                  <div className="p-3.5 bg-slate-950/45 grid grid-cols-2 sm:grid-cols-3 gap-2 border-t border-slate-900 animate-slide-down">
+                    {BUILDINGS.filter(b => b.resort === 'general').map((b) => {
+                      const isSelected = selectedBuilding?.id === b.id;
+                      return (
+                        <div
+                          key={b.id}
+                          onClick={() => setSelectedBuilding(b)}
+                          className={`p-3 rounded-xl border text-right cursor-pointer select-none transition-all duration-200 flex flex-col justify-between ${
+                            isSelected 
+                              ? 'bg-amber-500/10 border-amber-500 shadow-md shadow-amber-500/5 ring-1 ring-amber-500/30' 
+                              : 'bg-slate-900/40 border-slate-850 hover:border-slate-800 hover:bg-slate-900/80'
+                          }`}
+                        >
+                          <div className="flex items-center justify-between gap-1.5">
+                            <span className="text-[8px] bg-slate-950 text-slate-500 px-1.5 py-0.2 rounded font-mono font-bold">عام</span>
+                            {isSelected && <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />}
                           </div>
-                          
-                          <div className="text-[9px] text-slate-500">
-                            X: {b.offsetX}m, Y: {b.offsetY}m
-                          </div>
+                          <h4 className={`text-xs font-bold leading-tight mt-1.5 truncate ${isSelected ? 'text-amber-400' : 'text-slate-200'}`}>
+                            {b.nameAr}
+                          </h4>
                         </div>
-
-                        {/* Favorite Star (Friction-free Firestore synchronization) */}
-                        {user && (
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              toggleFavorite(b.id);
-                            }}
-                            className="absolute top-2 left-8 p-1 rounded-full text-amber-400 hover:scale-110 active:scale-95 transition-all z-20"
-                            title={lang === 'ar' ? 'أضف للمفضلة في فيربيس' : 'Add to favorites'}
-                          >
-                            <Star className={`w-3.5 h-3.5 ${guestProfile?.favoriteBuildings?.includes(b.id) ? 'fill-amber-400 text-amber-400' : 'text-slate-500 hover:text-amber-300'}`} />
-                          </button>
-                        )}
-
-                        {/* Selected Radio Button Dot */}
-                        <div className="absolute top-2 left-2">
-                          <div className={`w-3.5 h-3.5 rounded-full border-2 flex items-center justify-center transition-all ${
-                            isSelected ? 'border-amber-400 bg-amber-500' : 'border-slate-800 bg-transparent'
-                          }`}>
-                            {isSelected && <div className="w-1.5 h-1.5 bg-slate-950 rounded-full" />}
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })
-                ) : (
-                  <div className="col-span-full py-12 flex flex-col items-center justify-center gap-2 text-slate-400 bg-slate-900/10 border border-slate-800 rounded-2xl">
-                    <AlertTriangle className="w-8 h-8 text-amber-500 animate-bounce" />
-                    <p className="text-sm font-bold">
-                      {lang === 'ar' ? 'لا توجد نتائج مطابقة للبحث' : 'No buildings match your criteria'}
-                    </p>
-                    <button onClick={() => { setSearchQuery(''); setActiveCategory('all'); }} className="text-xs text-amber-400 underline">
-                      {lang === 'ar' ? 'إعادة ضبط مرشحات البحث' : 'Reset search filters'}
-                    </button>
+                      );
+                    })}
                   </div>
                 )}
               </div>
             </div>
 
-            {/* LIVE COMMUNITY TIPS SECTION (COMMUNITY INSIGHTS FROM FIRESTORE) */}
+            {/* HIGHLY COMPACT DETAILED PREVIEW & TARGET METRICS ONLY IF SELECTED */}
             {selectedBuilding && (
-              <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-4 shadow-xl" style={{ direction: lang === 'ar' ? 'rtl' : 'ltr' }}>
-                <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-                  <div className="flex items-center gap-2">
-                    <MessageSquare className="w-5 h-5 text-amber-500" />
-                    <h4 className="text-sm font-bold text-white font-display">
-                      {lang === 'ar' ? `نصائح زوار المنتجع لـ (${lang === 'ar' ? selectedBuilding.nameAr : selectedBuilding.nameEn})` : `Resort Tips for ${selectedBuilding.nameEn}`}
-                    </h4>
+              <div className="bg-slate-900 border border-slate-850 p-4 rounded-2xl text-right space-y-3 shadow-inner animate-scale-up">
+                <div className="flex items-start justify-between border-b border-slate-800 pb-2.5">
+                  <div>
+                    <span className="text-[10px] text-amber-500 font-extrabold uppercase">الوجهة المستهدفة النشطة</span>
+                    <h3 className="text-sm font-extrabold text-white">{selectedBuilding.nameAr}</h3>
                   </div>
-                  <span className="text-[10px] bg-slate-800 text-amber-400 px-2 py-0.5 rounded-full font-bold">
-                    {lang === 'ar' ? `${activeTips.length} نصائح` : `${activeTips.length} tips`}
+                  <span className="text-[10px] bg-slate-950 text-slate-400 px-2 py-0.5 rounded-full font-mono font-bold">
+                    ID: #{selectedBuilding.id}
                   </span>
                 </div>
+                
+                <p className="text-slate-300 text-xs leading-relaxed font-sans">{selectedBuilding.descriptionAr}</p>
 
-                {/* Submitting tip form (Only if guest is signed in) */}
-                {user ? (
-                  <form 
-                    onSubmit={async (e) => {
-                      e.preventDefault();
-                      if (!newTipText.trim()) return;
-                      await submitBuildingTip(selectedBuilding.id, newTipText);
-                      setNewTipText('');
-                      setSubmitSuccess(true);
-                      setTimeout(() => setSubmitSuccess(false), 2000);
-                    }}
-                    className="flex items-center gap-2.5"
-                  >
-                    <input 
-                      type="text" 
-                      value={newTipText}
-                      onChange={(e) => setNewTipText(e.target.value)}
-                      maxLength={200}
-                      placeholder={lang === 'ar' ? 'اكتب نصيحة سريعة (مثال: الخدمة هنا ممتازة!)' : 'Write a quick guest tip... (e.g. delicious food here!)'}
-                      className="flex-grow p-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-500"
-                    />
-                    <button 
-                      type="submit"
-                      disabled={!newTipText.trim()}
-                      className={`px-4 py-2.5 rounded-xl font-bold font-display text-xs transition-all flex items-center gap-1.5 ${newTipText.trim() ? 'bg-amber-500 text-slate-950 hover:bg-amber-400 cursor-pointer' : 'bg-slate-800 text-slate-600 cursor-not-allowed'}`}
-                    >
-                      <Plus className="w-3.5 h-3.5" />
-                      <span>{lang === 'ar' ? 'أضف' : 'Add'}</span>
-                    </button>
-                  </form>
-                ) : (
-                  <p className="text-[11px] text-slate-400 bg-slate-950 p-2.5 rounded-xl text-center">
-                    {lang === 'ar' 
-                      ? '🔒 يرجى تسجيل الدخول بكارت النزيل في الأعلى للمشاركة بنصائح حية حول هذا المبنى.'
-                      : '🔒 Please sign in with your Guest Pass above to submit custom tips for this building.'
-                    }
-                  </p>
-                )}
-
-                {/* Live tips presentation list */}
-                <div className="space-y-2.5 max-h-[180px] overflow-y-auto pr-1">
-                  {activeTips.length > 0 ? (
-                    activeTips.map((tip) => {
-                      const isCreator = user && tip.userId === user.uid;
-                      const formattedTime = tip.createdAt 
-                        ? new Date(tip.createdAt.seconds * 1000).toLocaleDateString(lang === 'ar' ? 'ar-EG' : 'en-US', { hour: '2-digit', minute: '2-digit' })
-                        : '';
-
-                      return (
-                        <div key={tip.tipId} className="bg-slate-950/60 p-3 rounded-xl border border-slate-850 flex items-start justify-between gap-3 animate-fade-in text-right">
-                          <div className="space-y-1 text-right flex-1">
-                            <div className="flex items-center gap-2 justify-start">
-                              <span className="text-[10.5px] font-bold text-slate-200">{tip.userName}</span>
-                              <span className="text-[9px] text-slate-500 font-mono">{formattedTime}</span>
-                            </div>
-                            <p className="text-xs text-amber-500/90 leading-relaxed font-sans">{tip.caption}</p>
-                          </div>
-                          {isCreator && (
-                            <button 
-                              onClick={() => deleteBuildingTip(tip.tipId)}
-                              className="p-1.5 hover:bg-red-500/10 text-slate-500 hover:text-red-400 rounded-lg transition shrink-0 cursor-pointer"
-                              title={lang === 'ar' ? 'حذف ملاحظتي' : 'Delete my tip'}
-                            >
-                              <Trash2 className="w-3.5 h-3.5" />
-                            </button>
-                          )}
-                        </div>
-                      );
-                    })
-                  ) : (
-                    <div className="text-center py-4 text-[11px] text-slate-500 font-mono">
-                      {lang === 'ar' ? 'لا توجد ملاحظات من النزلاء بعد لهذا المرفق.' : 'No crowdsourced tips left yet. Share yours!'}
-                    </div>
+                {/* Estimate layout distance (real or simulated center offset) */}
+                <div className="flex items-center gap-3 text-[11px] text-slate-400 font-mono bg-slate-950 p-2.5 rounded-xl border border-slate-850">
+                  <div className="flex items-center gap-1">
+                    <MapPin className="w-3.5 h-3.5 text-amber-500" />
+                    <span>الموقع الإحداثي التقريبي:</span>
+                    <strong className="text-white">X: {selectedBuilding.offsetX}م, Y: {selectedBuilding.offsetY}م</strong>
+                  </div>
+                  {currentCoords && (
+                    <span className="text-emerald-400 font-bold mr-auto">
+                      ✓ جاهز للملاحة بالـ GPS
+                    </span>
                   )}
                 </div>
               </div>
             )}
 
-            {/* SELECTION SUMMARY / FOOTER BUTTON TO NAVIGATE */}
-            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex flex-col md:flex-row items-center justify-between gap-4">
-              <div className="flex-1 text-right md:text-right" style={{ direction: lang === 'ar' ? 'rtl' : 'ltr' }}>
+            {/* CORE ACTION SUBMIT AND START WAYFINDING TRIGGER */}
+            <div className="bg-slate-900 border border-slate-850 rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div className="flex-1 text-right">
                 {selectedBuilding ? (
-                  <div className="space-y-1">
-                    <h5 className="text-xs text-slate-400">
-                      {lang === 'ar' ? 'الوجهة المحددة حالياً:' : 'Your Active Destination Target:'}
+                  <div className="space-y-0.5">
+                    <span className="text-[10px] text-slate-400 block">وجهتك وجاهزية المستشعرات:</span>
+                    <h5 className="text-xs font-bold text-emerald-400 flex items-center gap-1.5 justify-start">
+                      <CheckCircle className="w-4 h-4 text-emerald-400" />
+                      <span>{selectedBuilding.nameAr}</span>
+                      <span className="text-[10px] bg-slate-800 text-slate-300 px-1.5 py-0.2 rounded font-mono">#{selectedBuilding.id}</span>
                     </h5>
-                    <div className="flex items-center gap-2 justify-start">
-                      <CheckCircle className="w-5 h-5 text-emerald-500" />
-                      <strong className="text-sm text-white">
-                        {lang === 'ar' ? selectedBuilding.nameAr : selectedBuilding.nameEn}
-                      </strong>
-                      <span className="text-xs bg-slate-800 text-slate-400 px-2 py-0.5 rounded-full">
-                        {lang === 'ar' ? 'المبنى #' + selectedBuilding.id : 'B-#' + selectedBuilding.id}
-                      </span>
-                    </div>
                   </div>
                 ) : (
-                  <div className="flex items-center gap-2 justify-start">
-                    <AlertTriangle className="w-5 h-5 text-amber-500 animate-pulse" />
-                    <p className="text-xs font-medium text-slate-400">
-                      {lang === 'ar'
-                        ? 'يرجى اختيار أحد المباني الـ 50 الموضحة أعلاه من أجل تفعيل الواقع المعزز وميزة التوجيه.'
-                        : 'Choose one of the 50 resort buildings above to launch your dynamic camera wayfinder.'
-                      }
-                    </p>
+                  <div className="flex items-center gap-2 justify-start text-amber-400 animate-pulse">
+                    <AlertTriangle className="w-4 h-4 text-amber-400" />
+                    <p className="text-xs font-semibold">تنبيه: اختر أحد الأبنية أو الأماكن المنسدلة في الأعلى لتفعيل الملاحة.</p>
                   </div>
                 )}
               </div>
 
-              {/* ACTION BUTTON */}
+              {/* DYNAMIC "START" BUTTON SENSITIZED TO GPS AND CAMERA */}
               <button
                 disabled={!selectedBuilding}
                 onClick={startWayfinding}
-                className={`w-full md:w-auto px-8 py-3.5 rounded-xl font-bold font-display text-sm flex items-center justify-center gap-2.5 transition shadow-lg transition-transform active:scale-95 cursor-pointer ${
+                className={`w-full sm:w-auto px-10 py-4 rounded-xl font-bold font-display text-sm flex items-center justify-center gap-2.5 shadow-lg active:scale-95 transition-all duration-300 cursor-pointer ${
                   selectedBuilding 
-                    ? 'bg-amber-500 text-slate-950 hover:bg-amber-400 shadow-amber-500/20' 
-                    : 'bg-slate-800 text-slate-600 cursor-not-allowed'
+                    ? 'bg-amber-500 text-slate-950 hover:bg-amber-400 hover:shadow-amber-500/10 font-black' 
+                    : 'bg-slate-800 text-slate-600 border border-slate-850 cursor-not-allowed'
                 }`}
               >
-                <Camera className="w-5 h-5" />
-                <span>{lang === 'ar' ? 'ابدأ التوجيه بالواقع المعزز (AR)' : 'Start AR Navigation'}</span>
-                <ChevronRight className="w-4 h-4 text-slate-900" />
+                <Camera className="w-5 h-5 text-slate-950" />
+                <span>ابدأ الملاحة وتفعيل الكاميرا والـ GPS</span>
+                <ChevronRight className="w-4 h-4 text-slate-950 transform rotate-180" />
               </button>
             </div>
+
           </div>
         )}
 
