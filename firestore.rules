@@ -1,0 +1,106 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // 1. Global Safety Net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Common Helpers
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    // Validation Helpers
+    function isValidGuestProfile(data) {
+      return data.userId == request.auth.uid
+        && data.guestName is string
+        && data.guestName.size() >= 1
+        && data.guestName.size() <= 100
+        && (!('roomNumber' in data) || (data.roomNumber is string && data.roomNumber.size() <= 20))
+        && (!('favoriteBuildings' in data) || (data.favoriteBuildings is list && data.favoriteBuildings.size() <= 60 && (data.favoriteBuildings.size() == 0 || data.favoriteBuildings[0] is int)))
+        && (!('updatedAt' in data) || data.updatedAt == request.time);
+    }
+
+    function isValidNavigationSession(data) {
+      return data.sessionId is string
+        && data.sessionId.size() <= 128
+        && data.userId == request.auth.uid
+        && data.buildingId is int
+        && data.buildingName is string
+        && data.buildingName.size() <= 100
+        && data.completed is bool
+        && data.timestamp == request.time;
+    }
+
+    function isValidBuildingTip(data) {
+      return data.tipId is string
+        && data.tipId.size() <= 128
+        && data.buildingId is int
+        && data.userId == request.auth.uid
+        && data.userName is string
+        && data.userName.size() >= 1
+        && data.userName.size() <= 100
+        && data.caption is string
+        && data.caption.size() >= 1
+        && data.caption.size() <= 200
+        && data.createdAt == request.time
+        && (!('userEmail' in data) || (data.userEmail is string && data.userEmail.size() <= 100));
+    }
+
+    // Match definitions
+    match /guests/{userId} {
+      allow get: if isOwner(userId);
+      allow create: if isOwner(userId) 
+        && isValidId(userId)
+        && request.resource.data.keys().hasAll(['userId', 'guestName'])
+        && request.resource.data.keys().size() <= 5
+        && isValidGuestProfile(request.resource.data);
+
+      allow update: if isOwner(userId)
+        && isValidId(userId)
+        && request.resource.data.keys().hasAll(['userId', 'guestName'])
+        && request.resource.data.keys().size() <= 5
+        && isValidGuestProfile(request.resource.data)
+        && request.resource.data.userId == resource.data.userId; // Immutable userId
+
+      allow delete: if false; // Guests cannot delete their profile record
+    }
+
+    match /sessions/{sessionId} {
+      allow get: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow list: if isSignedIn() && resource.data.userId == request.auth.uid;
+      
+      allow create: if isSignedIn()
+        && isValidId(sessionId)
+        && request.resource.data.keys().hasAll(['sessionId', 'userId', 'buildingId', 'buildingName', 'completed', 'timestamp'])
+        && request.resource.data.keys().size() == 6
+        && isValidNavigationSession(request.resource.data);
+
+      allow update, delete: if false; // Sessions are immutable after creation
+    }
+
+    match /tips/{tipId} {
+      allow read: if isSignedIn(); // Any authenticated guest can read tips (collection-wide)
+      allow list: if isSignedIn() && resource.data.buildingId is int; // Restrict tips listing to valid queries
+      
+      allow create: if isSignedIn()
+        && isValidId(tipId)
+        && request.resource.data.keys().hasAll(['tipId', 'buildingId', 'userId', 'userName', 'caption', 'createdAt'])
+        && request.resource.data.keys().size() <= 7
+        && isValidBuildingTip(request.resource.data);
+
+      allow delete: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow update: if false; // Tips are immutable, if they need editing they delete and recreate
+    }
+  }
+}

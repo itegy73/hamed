@@ -1,0 +1,121 @@
+{
+  "entities": {
+    "GuestProfile": {
+      "title": "GuestProfile",
+      "description": "Profile details for each authenticated guest, containing check-in status and preferences.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "Unique identifier matching the Firebase Auth UID."
+        },
+        "guestName": {
+          "type": "string",
+          "description": "Public name or nickname of the guest."
+        },
+        "roomNumber": {
+          "type": "string",
+          "description": "Room or suite number corresponding to their check-in details."
+        },
+        "favoriteBuildings": {
+          "type": "array",
+          "description": "List of building IDs marked as favorite by the guest."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp of the last profile update."
+        }
+      },
+      "required": ["userId", "guestName"]
+    },
+    "NavigationSession": {
+      "title": "NavigationSession",
+      "description": "Log of a single navigation session where a guest initiates or completes directions to a building.",
+      "type": "object",
+      "properties": {
+        "sessionId": {
+          "type": "string",
+          "description": "Unique session document identifier."
+        },
+        "userId": {
+          "type": "string",
+          "description": "UID of the guest who ran the navigation."
+        },
+        "buildingId": {
+          "type": "integer",
+          "description": "ID of the target building."
+        },
+        "buildingName": {
+          "type": "string",
+          "description": "Name of the target building in English or Arabic."
+        },
+        "distanceMeters": {
+          "type": "number",
+          "description": "Distance computed at start or finish."
+        },
+        "completed": {
+          "type": "boolean",
+          "description": "Whether the guest successfully reached the destination."
+        },
+        "timestamp": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Time of the wayfinding action."
+        }
+      },
+      "required": ["sessionId", "userId", "buildingId", "buildingName", "completed", "timestamp"]
+    },
+    "BuildingTip": {
+      "title": "BuildingTip",
+      "description": "Social crowdsourced tips or comments written by guests for a particular building.",
+      "type": "object",
+      "properties": {
+        "tipId": {
+          "type": "string",
+          "description": "Unique building tip identifier."
+        },
+        "buildingId": {
+          "type": "integer",
+          "description": "ID of the building the tip is posted for."
+        },
+        "userId": {
+          "type": "string",
+          "description": "UID of the author who wrote the tip."
+        },
+        "userName": {
+          "type": "string",
+          "description": "Display name of the author."
+        },
+        "userEmail": {
+          "type": "string",
+          "description": "Email address of the author."
+        },
+        "caption": {
+          "type": "string",
+          "description": "Content text of the tip, restricted to 200 characters max."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp of creation."
+        }
+      },
+      "required": ["tipId", "buildingId", "userId", "userName", "caption", "createdAt"]
+    }
+  },
+  "firestore": {
+    "guests/{userId}": {
+      "schema": "GuestProfile",
+      "description": "Stores guest profile settings and checked-in information."
+    },
+    "sessions/{sessionId}": {
+      "schema": "NavigationSession",
+      "description": "Logs guest wayfinding sessions for statistics and history."
+    },
+    "tips/{tipId}": {
+      "schema": "BuildingTip",
+      "description": "Community tips and reviews submitted by guests on hotel buildings."
+    }
+  }
+}

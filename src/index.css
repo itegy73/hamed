@@ -5,6 +5,11 @@
   --font-sans: "Cairo", "Outfit", ui-sans-serif, system-ui, sans-serif;
   --font-display: "Outfit", "Cairo", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+  
+  --color-brand-blue: #071d2e;
+  --color-brand-blue-light: #0d2f4a;
+  --color-brand-gold: #dfc28d;
+  --color-brand-gold-dark: #c6a362;
 }
 
 /* Custom smooth transitions and neon styles */
