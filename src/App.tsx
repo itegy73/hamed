@@ -91,7 +91,8 @@ export default function App() {
   useEffect(() => {
     if (
       typeof window !== 'undefined' &&
-      typeof (DeviceOrientationEvent as any).requestPermission === 'function'
+      typeof (window as any).DeviceOrientationEvent !== 'undefined' &&
+      typeof (window as any).DeviceOrientationEvent.requestPermission === 'function'
     ) {
       setIOSPermissionState('prompt');
     } else {
@@ -296,7 +297,7 @@ export default function App() {
     // Request iOS orientation authorization if prompted
     if (iOSPermissionState === 'prompt') {
       try {
-        const response = await (DeviceOrientationEvent as any).requestPermission();
+        const response = await (window as any).DeviceOrientationEvent.requestPermission();
         if (response === 'granted') {
           setIOSPermissionState('granted');
         } else {

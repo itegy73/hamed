@@ -1,6 +1,11 @@
 {
   "name": "AR Hotel Wayfinder",
-  "description": "تطبيق توجيه النزلاء بالواقع المعزز داخل الفندق باستخدام الكاميرا، والبوصلة الرقمية، ونظام تحديد المواقع العالمي GPS.",
-  "requestFramePermissions": ["camera", "geolocation"],
-  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+  "description": "AR hotel wayfinder application to guide resort guests using camera compass and GPS positioning.",
+  "requestFramePermissions": [
+    "camera",
+    "geolocation"
+  ],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
 }
