@@ -15,9 +15,11 @@ import {
   Search,
   X
 } from 'lucide-react';
-import { BUILDINGS, Building } from './data/buildings';
+import { Building } from './data/buildings';
 import { getHaversineDistance, getBearing, getCoordinatesFromOffsets, formatDistance } from './utils/geo';
 import ResortMap from './components/ResortMap';
+import { useFirebase } from './context/FirebaseContext';
+import AdminPanel from './components/AdminPanel';
 
 // Default center coordinates bounds directly to Charmillion Resorts (Nabq Bay, Sharm El Sheikh, Egypt)
 const DEFAULT_CENTER = {
@@ -28,6 +30,40 @@ const DEFAULT_CENTER = {
 };
 
 export default function App() {
+  const { 
+    buildings: firebaseBuildings, 
+    isAdmin, 
+    addOrEditPlace, 
+    deletePlace,
+    user,
+    loginWithGoogle,
+    logoutUser
+  } = useFirebase();
+
+  // Admin draft previews state for local interactive verification before saving to Firestore
+  const [adminDraftPlaces, setAdminDraftPlaces] = useState<Building[] | null>(null);
+  const [isAdminModeActive, setIsAdminModeActive] = useState(false);
+
+  // Active places list
+  const activeBuildings = useMemo(() => {
+    return adminDraftPlaces || firebaseBuildings;
+  }, [adminDraftPlaces, firebaseBuildings]);
+
+  // Handle live pin dragging coordination update on the ResortMap
+  const updateBuildingCoords = (id: number, offsetX: number, offsetY: number) => {
+    const list = adminDraftPlaces || firebaseBuildings;
+    const freshDraft = list.map(b => 
+      b.id === id ? { ...b, offsetX, offsetY } : b
+    );
+    // Persist as local draft coordinates preview
+    setAdminDraftPlaces(freshDraft);
+    
+    // Smoothly synchronize the map-selected building details state
+    if (selectedBuilding && selectedBuilding.id === id) {
+      setSelectedBuilding({ ...selectedBuilding, offsetX, offsetY });
+    }
+  };
+
   const [lang, setLang] = useState<'ar' | 'en'>('ar');
   const [selectedBuilding, setSelectedBuilding] = useState<Building | null>(null);
   const [isNavigating, setIsNavigating] = useState(false);
@@ -178,7 +214,7 @@ export default function App() {
 
   // Filter buildings list based on search and category tab
   const filteredBuildings = useMemo(() => {
-    return BUILDINGS.filter(b => {
+    return activeBuildings.filter(b => {
       // Category filter
       if (selectedCategory !== 'all' && b.resort !== selectedCategory) {
         return false;
@@ -193,7 +229,7 @@ export default function App() {
       }
       return true;
     });
-  }, [selectedCategory, searchQuery]);
+  }, [selectedCategory, searchQuery, activeBuildings]);
 
   // --- Dynamic calculations of targets coordinates based on User GPS ---
   const activeSelectedBuildingCoords = useMemo(() => {
@@ -389,14 +425,53 @@ export default function App() {
           </div>
         </div>
 
-        {/* Change language toggle */}
-        <button 
-          onClick={() => setLang(l => l === 'ar' ? 'en' : 'ar')}
-          className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 transition text-[11px] font-bold border border-slate-700/50 text-slate-200"
-        >
-          <Globe className="w-3.5 h-3.5 text-amber-500" />
-          <span>{lang === 'ar' ? 'English' : 'عربي'}</span>
-        </button>
+        {/* HEADER CONTROLS */}
+        <div className="flex items-center gap-2">
+          {/* Change language toggle */}
+          <button 
+            onClick={() => setLang(l => l === 'ar' ? 'en' : 'ar')}
+            className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 transition text-[11px] font-bold border border-slate-700/50 text-slate-200"
+          >
+            <Globe className="w-3.5 h-3.5 text-amber-500" />
+            <span>{lang === 'ar' ? 'English' : 'عربي'}</span>
+          </button>
+
+          {/* User Sign In and Admin Switcher */}
+          {!user ? (
+            <button
+              onClick={loginWithGoogle}
+              className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-amber-500 text-slate-950 font-black text-[11px] hover:bg-amber-400 transition shadow"
+            >
+              <span>🔑 {lang === 'ar' ? 'دخول المدير' : 'Admin Login'}</span>
+            </button>
+          ) : (
+            <div className="flex items-center gap-2">
+              {isAdmin && (
+                <button
+                  onClick={() => setIsAdminModeActive(prev => !prev)}
+                  className={`px-3 py-1.5 rounded-lg font-black text-[11px] transition flex items-center gap-1.5 shadow ${
+                    isAdminModeActive 
+                      ? 'bg-rose-600 text-white animate-pulse' 
+                      : 'bg-emerald-600 text-white hover:bg-emerald-500'
+                  }`}
+                >
+                  <span>{isAdminModeActive 
+                    ? (lang === 'ar' ? 'الخروج للرئيسية 📱' : 'Exit Admin 📱') 
+                    : (lang === 'ar' ? 'بوابة الإدارة 🛠️' : 'Admin Console 🛠️')}
+                  </span>
+                </button>
+              )}
+              
+              <button
+                onClick={logoutUser}
+                title={lang === 'ar' ? 'خروج' : 'Logout'}
+                className="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-750 text-slate-400 hover:text-white transition text-[11px] font-bold border border-slate-700/60"
+              >
+                {lang === 'ar' ? 'خروج' : 'Logout'}
+              </button>
+            </div>
+          )}
+        </div>
       </header>
 
       {/* ERROR / WARNING MESSAGES */}
@@ -450,16 +525,44 @@ export default function App() {
             </div>
 
             {/* INTERACTIVE RESORT DIRECTIONS MAP */}
+            {adminDraftPlaces && (
+              <div className="bg-amber-500/10 border border-dashed border-amber-500/40 rounded-2xl p-3 text-center text-xs text-amber-400 font-bold max-w-md mx-auto animate-pulse flex items-center justify-center gap-2">
+                <span>👁️ {lang === 'ar' ? 'أنت تشاهد حالياً معاينة للمباني والمواقع المعدلة محلياً.' : 'Viewing unsaved local draft preview locations.'}</span>
+              </div>
+            )}
+
             <ResortMap 
-              buildings={BUILDINGS}
+              buildings={activeBuildings}
               selectedBuilding={selectedBuilding}
               onSelectBuilding={setSelectedBuilding}
               filteredBuildings={filteredBuildings}
               lang={lang}
+              isAdmin={isAdmin}
+              isAdminModeActive={isAdminModeActive}
+              onUpdateBuildingCoords={updateBuildingCoords}
             />
 
             {/* THE PROFESSIONAL CATEGORIZED & SEARCHABLE SELECTOR PANEL */}
-            <div className="bg-slate-900 border border-slate-800/85 rounded-3xl p-5 md:p-6 space-y-5 shadow-2xl relative">
+            {isAdmin && isAdminModeActive ? (
+              <AdminPanel
+                buildings={activeBuildings}
+                onPreview={(drafts) => setAdminDraftPlaces(drafts)}
+                onPublish={addOrEditPlace}
+                onDelete={deletePlace}
+                lang={lang}
+                draftPlaces={adminDraftPlaces}
+                onClearDrafts={() => setAdminDraftPlaces(null)}
+                onPublishAllDrafts={async (drafts) => {
+                  for (const p of drafts) {
+                    await addOrEditPlace(p);
+                  }
+                  setAdminDraftPlaces(null);
+                }}
+                setSelectedBuilding={setSelectedBuilding}
+                selectedBuilding={selectedBuilding}
+              />
+            ) : (
+              <div className="bg-slate-900 border border-slate-800/85 rounded-3xl p-5 md:p-6 space-y-5 shadow-2xl relative">
               
               {/* SEARCH FIELD WITH A LENS / GLASSES ICON DESIGN */}
               <div className="space-y-1.5">
@@ -630,6 +733,7 @@ export default function App() {
                 </span>
               </button>
             </div>
+            )}
             
           </div>
         )}

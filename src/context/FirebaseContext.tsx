@@ -28,6 +28,7 @@ import {
   handleFirestoreError, 
   OperationType 
 } from '../lib/firebase';
+import { BUILDINGS, Building } from '../data/buildings';
 
 export interface GuestProfile {
   userId: string;
@@ -72,6 +73,10 @@ interface FirebaseContextType {
   activeTips: BuildingTip[];
   loadBuildingTips: (buildingId: number) => () => void;
   sessionsHistory: NavigationSession[];
+  buildings: Building[];
+  isAdmin: boolean;
+  addOrEditPlace: (place: Building) => Promise<void>;
+  deletePlace: (id: number) => Promise<void>;
 }
 
 const FirebaseContext = createContext<FirebaseContextType | undefined>(undefined);
@@ -83,6 +88,7 @@ export function FirebaseProvider({ children }: { children: React.ReactNode }) {
   const [profileLoading, setProfileLoading] = useState(false);
   const [activeTips, setActiveTips] = useState<BuildingTip[]>([]);
   const [sessionsHistory, setSessionsHistory] = useState<NavigationSession[]>([]);
+  const [customPlaces, setCustomPlaces] = useState<Building[]>([]);
 
   // Monitor Authentication state
   useEffect(() => {
@@ -311,6 +317,74 @@ export function FirebaseProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  // Synchronize dynamic custom places list from Firestore
+  useEffect(() => {
+    const qPath = 'places';
+    const unsubscribe = onSnapshot(collection(db, qPath), (snapshot) => {
+      const list: Building[] = [];
+      snapshot.forEach((doc) => {
+        list.push(doc.data() as Building);
+      });
+      setCustomPlaces(list);
+    }, (error) => {
+      console.warn("Could not read custom places from Firestore. Using static assets.", error);
+    });
+
+    return unsubscribe;
+  }, []);
+
+  // Compute combined elements
+  const buildingsListCombined = React.useMemo(() => {
+    if (customPlaces.length === 0) return BUILDINGS;
+
+    const customMap = new Map<number, Building>();
+    customPlaces.forEach((p) => {
+      customMap.set(p.id, p);
+    });
+
+    const staticIds = new Set(BUILDINGS.map(b => b.id));
+    const merged = BUILDINGS.map((b) => {
+      if (customMap.has(b.id)) {
+        return customMap.get(b.id)!;
+      }
+      return b;
+    });
+
+    const newPlaces = customPlaces.filter(p => !staticIds.has(p.id));
+    return [...merged, ...newPlaces].filter(p => (p as any).deleted !== true);
+  }, [customPlaces]);
+
+  // Check if current user email is admin
+  const isAdminUser = React.useMemo(() => {
+    return user?.email === 'itegy73@gmail.com';
+  }, [user]);
+
+  // Core write managers
+  const addOrEditPlace = async (place: Building) => {
+    const placeIdStr = place.id.toString();
+    try {
+      await setDoc(doc(db, 'places', placeIdStr), place);
+    } catch (err) {
+      handleFirestoreError(err, OperationType.WRITE, `places/${placeIdStr}`);
+    }
+  };
+
+  const deletePlace = async (id: number) => {
+    const placeIdStr = id.toString();
+    const isStatic = BUILDINGS.some(b => b.id === id);
+    try {
+      if (isStatic) {
+        // Soft delete static records using deleted flag in Firestore
+        await setDoc(doc(db, 'places', placeIdStr), { id, deleted: true } as any);
+      } else {
+        // Hard delete newly custom added records
+        await deleteDoc(doc(db, 'places', placeIdStr));
+      }
+    } catch (err) {
+      handleFirestoreError(err, OperationType.DELETE, `places/${placeIdStr}`);
+    }
+  };
+
   return (
     <FirebaseContext.Provider value={{
       user,
@@ -326,7 +400,11 @@ export function FirebaseProvider({ children }: { children: React.ReactNode }) {
       deleteBuildingTip,
       activeTips,
       loadBuildingTips,
-      sessionsHistory
+      sessionsHistory,
+      buildings: buildingsListCombined,
+      isAdmin: isAdminUser,
+      addOrEditPlace,
+      deletePlace
     }}>
       {children}
     </FirebaseContext.Provider>

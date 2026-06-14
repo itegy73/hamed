@@ -102,6 +102,60 @@
         }
       },
       "required": ["tipId", "buildingId", "userId", "userName", "caption", "createdAt"]
+    },
+    "ResortPlace": {
+      "title": "ResortPlace",
+      "description": "A custom dynamic or modified resort building/spot added or edited by the administrator.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "integer",
+          "description": "Unique building number ID."
+        },
+        "nameAr": {
+          "type": "string",
+          "description": "Arabic display name of the place."
+        },
+        "nameEn": {
+          "type": "string",
+          "description": "English display name of the place."
+        },
+        "type": {
+          "type": "string",
+          "enum": ["rooms", "dining", "facilities", "sports", "recreation", "services"],
+          "description": "Classification of the spot."
+        },
+        "resort": {
+          "type": "string",
+          "enum": ["club", "life", "gardens", "general"],
+          "description": "Resort zone category."
+        },
+        "descriptionAr": {
+          "type": "string",
+          "description": "Arabic description of the place."
+        },
+        "descriptionEn": {
+          "type": "string",
+          "description": "English description of the place."
+        },
+        "offsetX": {
+          "type": "number",
+          "description": "East-West offset in meters."
+        },
+        "offsetY": {
+          "type": "number",
+          "description": "North-South offset in meters."
+        },
+        "hoursAr": {
+          "type": "string",
+          "description": "Optional Arabic operating hours."
+        },
+        "hoursEn": {
+          "type": "string",
+          "description": "Optional English operating hours."
+        }
+      },
+      "required": ["id", "nameAr", "nameEn", "type", "resort", "descriptionAr", "descriptionEn", "offsetX", "offsetY"]
     }
   },
   "firestore": {
@@ -116,6 +170,10 @@
     "tips/{tipId}": {
       "schema": "BuildingTip",
       "description": "Community tips and reviews submitted by guests on hotel buildings."
+    },
+    "places/{placeId}": {
+      "schema": "ResortPlace",
+      "description": "Customized and added resort structures in charmillion."
     }
   }
 }
