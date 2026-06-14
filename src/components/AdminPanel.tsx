@@ -182,18 +182,29 @@ export default function AdminPanel({
           ? 'تم حفظ ونشر التغييرات رسمياً إلى الخرائط وسوف يراها كافة المستخدمين الآن!'
           : 'Changes successfully published to production database!'
       );
-    } catch (e) {
-      triggerAlert(lang === 'ar' ? 'فشل الحفظ في قاعدة البيانات بقواعد حماية Firestore' : 'Failed to publish via Firestore security', 'error');
+    } catch (e: any) {
+      console.error("Publishing error detail:", e);
+      const detail = e?.message || String(e);
+      triggerAlert(
+        lang === 'ar' 
+          ? `فشل الحفظ في قاعدة البيانات: ${detail}` 
+          : `Failed to publish via Firestore: ${detail}`, 
+        'error'
+      );
     }
   };
 
   // Publish all active drafts that admin has currently generated as preview
   const handlePublishAllDraftsActive = async () => {
-    if (!draftPlaces) return;
+    if (!draftPlaces || draftPlaces.length === 0) return;
     try {
-      // Find what modified buildings exist in draft
-      const activeDraft = draftPlaces.find(b => b.id === parseInt(formId)) || getFormBuildingObject();
-      await onPublish(activeDraft);
+      // Safely filter out any elements that might have NaN id (though we guard against this in Context)
+      const validDrafts = draftPlaces.filter(b => b && !isNaN(b.id));
+      if (validDrafts.length === 0) {
+        throw new Error(lang === 'ar' ? 'لا توجد مبانٍ صالحة للنشر.' : 'No valid buildings to publish.');
+      }
+      
+      await onPublishAllDrafts(validDrafts);
       onClearDrafts();
       resetForm();
       triggerAlert(
@@ -201,8 +212,13 @@ export default function AdminPanel({
           ? 'تم اعتماد ونشر جميع التعديلات المحفوظة بنجاح!'
           : 'All draft placements successfully synced and published!'
       );
-    } catch (e) {
-      triggerAlert(lang === 'ar' ? 'فشل النشر' : 'Publish failed', 'error');
+    } catch (e: any) {
+      console.error("Publishing drafts error detail:", e);
+      const detail = e?.message || String(e);
+      triggerAlert(
+        lang === 'ar' ? `فشل النشر: ${detail}` : `Publish failed: ${detail}`, 
+        'error'
+      );
     }
   };
 
@@ -224,8 +240,13 @@ export default function AdminPanel({
           ? 'تم حذف وإخفاء المكان بنجاح من المخططات.'
           : 'Building deleted from active maps.'
       );
-    } catch (e) {
-      triggerAlert(lang === 'ar' ? 'حدث خطأ أثناء الحذف' : 'Deletion error occurred', 'error');
+    } catch (e: any) {
+      console.error("Deletion error detail:", e);
+      const detail = e?.message || String(e);
+      triggerAlert(
+        lang === 'ar' ? `حدث خطأ أثناء الحذف: ${detail}` : `Deletion error occurred: ${detail}`, 
+        'error'
+      );
     }
   };
 

@@ -386,9 +386,21 @@ export function FirebaseProvider({ children }: { children: React.ReactNode }) {
 
   // Core write managers
   const addOrEditPlace = async (place: Building) => {
+    if (!place || isNaN(place.id)) {
+      throw new Error("Invalid building layout: ID is not a valid number.");
+    }
     const placeIdStr = place.id.toString();
+    
+    // Remote any undefined values safely to prevent Firestore crashes
+    const cleanedPlace: any = {};
+    Object.entries(place).forEach(([key, value]) => {
+      if (value !== undefined) {
+        cleanedPlace[key] = value;
+      }
+    });
+
     try {
-      await setDoc(doc(db, 'places', placeIdStr), place);
+      await setDoc(doc(db, 'places', placeIdStr), cleanedPlace);
     } catch (err) {
       handleFirestoreError(err, OperationType.WRITE, `places/${placeIdStr}`);
     }

@@ -102,5 +102,11 @@ service cloud.firestore {
       allow delete: if isSignedIn() && resource.data.userId == request.auth.uid;
       allow update: if false; // Tips are immutable, if they need editing they delete and recreate
     }
+
+    match /places/{placeId} {
+      allow read: if true;
+      allow write: if isSignedIn()
+        && request.auth.token.email == "itegy73@gmail.com";
+    }
   }
 }

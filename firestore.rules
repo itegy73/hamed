@@ -106,8 +106,7 @@ service cloud.firestore {
     match /places/{placeId} {
       allow read: if true;
       allow write: if isSignedIn()
-        && request.auth.token.email == "itegy73@gmail.com"
-        && request.auth.token.email_verified == true;
+        && request.auth.token.email == "itegy73@gmail.com";
     }
   }
 }
