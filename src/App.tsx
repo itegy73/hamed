@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { BUILDINGS, Building } from './data/buildings';
 import { getHaversineDistance, getBearing, getCoordinatesFromOffsets, formatDistance } from './utils/geo';
+import ResortMap from './components/ResortMap';
 
 // Default center coordinates bounds directly to Charmillion Resorts (Nabq Bay, Sharm El Sheikh, Egypt)
 const DEFAULT_CENTER = {
@@ -447,6 +448,15 @@ export default function App() {
                 )}
               </div>
             </div>
+
+            {/* INTERACTIVE RESORT DIRECTIONS MAP */}
+            <ResortMap 
+              buildings={BUILDINGS}
+              selectedBuilding={selectedBuilding}
+              onSelectBuilding={setSelectedBuilding}
+              filteredBuildings={filteredBuildings}
+              lang={lang}
+            />
 
             {/* THE PROFESSIONAL CATEGORIZED & SEARCHABLE SELECTOR PANEL */}
             <div className="bg-slate-900 border border-slate-800/85 rounded-3xl p-5 md:p-6 space-y-5 shadow-2xl relative">
