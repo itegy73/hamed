@@ -84,6 +84,7 @@ interface FirebaseContextType {
   mapBgImage: string | null;
   mapBgOpacity: number;
   saveMapBgSettings: (bgImage: string | null, bgOpacity: number) => Promise<void>;
+  placesLoading: boolean;
 }
 
 const FirebaseContext = createContext<FirebaseContextType | undefined>(undefined);
@@ -96,6 +97,7 @@ export function FirebaseProvider({ children }: { children: React.ReactNode }) {
   const [activeTips, setActiveTips] = useState<BuildingTip[]>([]);
   const [sessionsHistory, setSessionsHistory] = useState<NavigationSession[]>([]);
   const [customPlaces, setCustomPlaces] = useState<Building[]>([]);
+  const [placesLoading, setPlacesLoading] = useState(true);
 
   const [mapBgImage, setMapBgImage] = useState<string | null>(() => {
     return localStorage.getItem('resort_map_bg_image') || null;
@@ -382,8 +384,10 @@ export function FirebaseProvider({ children }: { children: React.ReactNode }) {
         // If snapshot came back and settings document wasn't found, keep state or fallback
       }
       setCustomPlaces(list);
+      setPlacesLoading(false);
     }, (error) => {
       console.warn("Could not read custom places from Firestore. Using static assets.", error);
+      setPlacesLoading(false);
     });
 
     return unsubscribe;
@@ -506,7 +510,8 @@ export function FirebaseProvider({ children }: { children: React.ReactNode }) {
       deletePlace,
       mapBgImage,
       mapBgOpacity,
-      saveMapBgSettings
+      saveMapBgSettings,
+      placesLoading
     }}>
       {children}
     </FirebaseContext.Provider>

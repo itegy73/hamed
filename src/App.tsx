@@ -38,7 +38,8 @@ export default function App() {
     deletePlace,
     user,
     loginWithGoogle,
-    logoutUser
+    logoutUser,
+    placesLoading
   } = useFirebase();
 
   // Admin draft previews state for local interactive verification before saving to Firestore
@@ -67,6 +68,7 @@ export default function App() {
   };
 
   const [lang, setLang] = useState<'ar' | 'en'>('ar');
+
   const [selectedBuilding, setSelectedBuilding] = useState<Building | null>(null);
   const [isNavigating, setIsNavigating] = useState(false);
   const [reachedTarget, setReachedTarget] = useState(false);
@@ -410,6 +412,27 @@ export default function App() {
     }));
   }, []);
 
+  if (placesLoading) {
+    return (
+      <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-6 text-center" style={{ direction: 'rtl' }}>
+        <div className="space-y-6 max-w-sm mx-auto">
+          <div className="bg-amber-500/10 p-5 rounded-full border border-amber-500/25 max-w-fit mx-auto animate-pulse shadow-lg shadow-amber-500/5">
+            <Compass className="w-12 h-12 text-amber-500 animate-[spin_4s_linear_infinite]" />
+          </div>
+          <div className="space-y-2">
+            <h2 className="text-white text-base font-black">
+              جاري تحميل خريطة ومواقع فندق شارميليون...
+            </h2>
+            <p className="text-slate-400 text-[11px] leading-relaxed">
+              يرجى الانتظار ثوانٍ معدودة لحين جلب وتحديث الإحداثيات الفعلية مباشرة من السيرفر.
+            </p>
+          </div>
+          <div className="w-5 h-5 border-2 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto opacity-75" />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans select-none overflow-x-hidden antialiased">
       
@@ -501,15 +524,10 @@ export default function App() {
             <div className="bg-gradient-to-br from-slate-900 to-slate-950 border border-slate-800 rounded-3xl p-6 shadow-2xl relative overflow-hidden">
               <div className="absolute top-0 right-0 -mr-16 -mt-16 w-48 h-48 bg-amber-500/5 rounded-full blur-2xl pointer-events-none" />
               
-              <div className="relative text-center space-y-2">
+              <div className="relative text-center">
                 <h2 className="text-lg md:text-xl font-extrabold text-white">
-                  {lang === 'ar' ? 'تحديد وجهتك في فندق تشارميليون' : 'Find Your Resort Spot'}
+                  {lang === 'ar' ? 'تحديد وجهتك في فندق شارميليون' : 'Find Your Resort Spot'}
                 </h2>
-                <p className="text-slate-400 text-xs leading-relaxed max-w-md mx-auto">
-                  {lang === 'ar' 
-                    ? 'اختر أي مبنى من الـ ٥٠ مبنى وموقعاً خدمياً، ثم انقر على الكاميرا والـ GPS لبدء تتبع وإظهار سهم الوجهة التفاعلية تلقائياً.' 
-                    : 'Select from 50 building numbers or public guest spots to trace your path on physical map coordinates.'}
-                </p>
               </div>
 
               {/* CHOSEN COMPASS STABILIZER STATE */}
