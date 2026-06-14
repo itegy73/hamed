@@ -12,6 +12,8 @@ interface ResortMapProps {
   isAdmin?: boolean;
   isAdminModeActive?: boolean;
   onUpdateBuildingCoords?: (id: number, offsetX: number, offsetY: number) => void;
+  hoveredBuilding?: Building | null;
+  onHoverBuilding?: (building: Building | null) => void;
 }
 
 // Bounding box for exact resort meters coordinates
@@ -29,9 +31,23 @@ export default function ResortMap({
   isAdmin = false,
   isAdminModeActive = false,
   onUpdateBuildingCoords,
+  hoveredBuilding: propsHovered,
+  onHoverBuilding,
 }: ResortMapProps) {
   // Keeps track of hovered building for dynamic tooltip display
-  const [hoveredBuilding, setHoveredBuilding] = useState<Building | null>(null);
+  const [localHovered, setLocalHovered] = useState<Building | null>(null);
+  const hoveredBuilding = propsHovered !== undefined ? propsHovered : localHovered;
+
+  const setHoveredBuilding = (val: Building | null | ((prev: Building | null) => Building | null)) => {
+    if (typeof val === 'function') {
+      const computedVal = val(hoveredBuilding);
+      setLocalHovered(computedVal);
+      onHoverBuilding?.(computedVal);
+    } else {
+      setLocalHovered(val);
+      onHoverBuilding?.(val);
+    }
+  };
 
   // Active dragging building state for admin coordinate modification
   const [draggingId, setDraggingId] = useState<number | null>(null);
@@ -120,6 +136,24 @@ export default function ResortMap({
     const file = e.target.files?.[0];
     if (file) {
       const reader = new FileReader();
+
+      // If it is an SVG file, load it directly as raw Data URL (retains perfect vector quality)
+      if (file.type === 'image/svg+xml') {
+        reader.onloadend = async () => {
+          const svgDataUrl = reader.result as string;
+          try {
+            await saveMapBgSettings(svgDataUrl, mapBgOpacity);
+          } catch (err: any) {
+            alert(lang === 'ar' 
+              ? `خطأ أثناء حفظ صورة الخلفية: ${err?.message || err}`
+              : `Error saving background map: ${err?.message || err}`);
+          }
+        };
+        reader.readAsDataURL(file);
+        return;
+      }
+
+      // Otherwise, process standard raster image formats using canvas downscaling
       reader.onloadend = () => {
         const img = new Image();
         img.onload = async () => {
@@ -224,13 +258,13 @@ export default function ResortMap({
         {/* Grid lines */}
         <div className="absolute inset-0 bg-[radial-gradient(rgba(245,158,11,0.06)_1px,transparent_1px)] [background-size:24px_24px] pointer-events-none" />
         
-        {/* Custom JPG Background layer image */}
+        {/* Custom JPG/SVG Background layer image */}
         {mapBgImage && (
           <img 
             src={mapBgImage} 
             alt="Resort Background Map" 
             referrerPolicy="no-referrer"
-            className="absolute inset-0 w-full h-full object-cover pointer-events-none transition-opacity duration-200"
+            className="absolute inset-x-0 inset-y-0 w-full h-full object-fill pointer-events-none transition-opacity duration-200"
             style={{ opacity: mapBgOpacity }}
           />
         )}
@@ -351,44 +385,6 @@ export default function ResortMap({
 
       </div>
 
-      {/* DYNAMIC REAL-TIME ON-MAP FLOATING CONTEXT BAR - MOVED OUTSIDE MAP TO PREVENT OBSTRUCTING PIN CLICKS */}
-      {(hoveredBuilding || selectedBuilding) && draggingId === null && (
-        <div 
-          className="bg-slate-950 border border-slate-850 p-4 rounded-xl shadow-2xl flex items-center justify-between gap-3 animate-fade-in mt-3"
-          style={{ direction: 'rtl' }}
-        >
-          <div className="flex-1 text-right min-w-0">
-            <span className={`text-[8px] px-1.5 py-0.5 rounded font-black font-mono ml-2 ${
-              (hoveredBuilding || selectedBuilding)?.resort === 'club' ? 'bg-emerald-950 text-emerald-400 border border-emerald-900/60' :
-              (hoveredBuilding || selectedBuilding)?.resort === 'life' ? 'bg-cyan-950 text-cyan-400 border border-cyan-900/60' :
-              (hoveredBuilding || selectedBuilding)?.resort === 'gardens' ? 'bg-violet-950 text-violet-400 border border-violet-900/60' :
-              'bg-amber-950 text-amber-400 border border-amber-900/60'
-            }`}>
-              #{(hoveredBuilding || selectedBuilding)?.id}
-            </span>
-            <strong className="text-xs text-white truncate inline-block vertical-middle font-bold font-sans">
-              {lang === 'ar' ? (hoveredBuilding || selectedBuilding)?.nameAr : (hoveredBuilding || selectedBuilding)?.nameEn}
-            </strong>
-            <p className="text-[10px] text-slate-400 mt-1 font-sans leading-relaxed">
-              {lang === 'ar' 
-                ? (hoveredBuilding || selectedBuilding)?.descriptionAr 
-                : (hoveredBuilding || selectedBuilding)?.descriptionEn}
-            </p>
-          </div>
-
-          <div className="shrink-0 flex items-center justify-center gap-1.5 border-r border-slate-800 pr-3">
-            <button
-              type="button"
-              onClick={() => onSelectBuilding(hoveredBuilding || selectedBuilding)}
-              className="px-3.5 py-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 transition font-black text-xs rounded-xl shadow-md flex items-center gap-1.5"
-            >
-              <span>{lang === 'ar' ? 'تحديد وجهتك والبدء' : 'Set Destination'}</span>
-              <Navigation className="w-3.5 h-3.5 rotate-45 shrink-0" />
-            </button>
-          </div>
-        </div>
-      )}
-
       {/* ADMIN MAP SETTINGS OVERLAY */}
       {isAdmin && isAdminModeActive && (
         <div className="p-3.5 bg-slate-950 border-2 border-dashed border-amber-500/40 rounded-2xl space-y-3 mt-4 animate-scale-up" style={{ direction: 'rtl' }}>
@@ -404,13 +400,13 @@ export default function ResortMap({
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-1 border-t border-slate-900">
-            {/* JPG Background controller */}
+            {/* JPG/SVG Background controller */}
             <div className="space-y-2 text-right">
-              <label className="text-[10px] font-black text-slate-300 block mb-1">خريطة الخلفية مخصصة (JPG/PNG):</label>
+              <label className="text-[10px] font-black text-slate-300 block mb-1">خريطة الخلفية مخصصة (JPG/PNG/SVG):</label>
               <div className="flex items-center gap-2">
                 <input 
                   type="file" 
-                  accept="image/jpeg,image/png"
+                  accept="image/jpeg,image/png,image/svg+xml"
                   onChange={handleBgImageChange}
                   className="hidden" 
                   id="map-bg-file"

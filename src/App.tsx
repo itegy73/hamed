@@ -70,6 +70,7 @@ export default function App() {
   const [lang, setLang] = useState<'ar' | 'en'>('ar');
 
   const [selectedBuilding, setSelectedBuilding] = useState<Building | null>(null);
+  const [hoveredBuilding, setHoveredBuilding] = useState<Building | null>(null);
   const [isNavigating, setIsNavigating] = useState(false);
   const [reachedTarget, setReachedTarget] = useState(false);
   const [gpsError, setGpsError] = useState<string | null>(null);
@@ -560,7 +561,47 @@ export default function App() {
               isAdmin={isAdmin}
               isAdminModeActive={isAdminModeActive}
               onUpdateBuildingCoords={updateBuildingCoords}
+              hoveredBuilding={hoveredBuilding}
+              onHoverBuilding={setHoveredBuilding}
             />
+
+            {/* DYNAMIC REAL-TIME FLOATING CONTEXT BAR - MOVED OUTSIDE MAP TO PREVENT OBSTRUCTING PIN CLICKS */}
+            {(hoveredBuilding || selectedBuilding) && (
+              <div 
+                className="bg-slate-900/95 border border-slate-800 p-4 rounded-2xl shadow-2xl flex items-center justify-between gap-3 animate-scale-up"
+                style={{ direction: 'rtl' }}
+              >
+                <div className="flex-1 text-right min-w-0">
+                  <span className={`text-[9px] px-2 py-0.5 rounded font-black font-mono ml-2 ${
+                    (hoveredBuilding || selectedBuilding)?.resort === 'club' ? 'bg-emerald-950 text-emerald-400 border border-emerald-900/60' :
+                    (hoveredBuilding || selectedBuilding)?.resort === 'life' ? 'bg-cyan-950 text-cyan-400 border border-cyan-900/60' :
+                    (hoveredBuilding || selectedBuilding)?.resort === 'gardens' ? 'bg-violet-950 text-violet-400 border border-violet-900/60' :
+                    'bg-amber-950 text-amber-400 border border-amber-900/60'
+                  }`}>
+                    #{(hoveredBuilding || selectedBuilding)?.id}
+                  </span>
+                  <strong className="text-xs text-white truncate inline-block vertical-middle font-black font-sans">
+                    {lang === 'ar' ? (hoveredBuilding || selectedBuilding)?.nameAr : (hoveredBuilding || selectedBuilding)?.nameEn}
+                  </strong>
+                  <p className="text-[11px] text-slate-300 mt-1 font-sans leading-relaxed">
+                    {lang === 'ar' 
+                      ? (hoveredBuilding || selectedBuilding)?.descriptionAr 
+                      : (hoveredBuilding || selectedBuilding)?.descriptionEn}
+                  </p>
+                </div>
+
+                <div className="shrink-0 flex items-center justify-center gap-1.5 border-r border-slate-800 pr-3">
+                  <button
+                    type="button"
+                    onClick={() => setSelectedBuilding(hoveredBuilding || selectedBuilding)}
+                    className="px-3.5 py-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 transition font-black text-xs rounded-xl shadow-md flex items-center gap-1.5 cursor-pointer"
+                  >
+                    <span>{lang === 'ar' ? 'تحديد كوجهة مخصصة' : 'Set Destination'}</span>
+                    <Navigation className="w-3.5 h-3.5 rotate-45 shrink-0" />
+                  </button>
+                </div>
+              </div>
+            )}
 
             {/* THE PROFESSIONAL CATEGORIZED & SEARCHABLE SELECTOR PANEL */}
             {isAdmin && isAdminModeActive ? (
