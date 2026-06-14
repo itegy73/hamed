@@ -3,7 +3,9 @@ import {
   User, 
   signInWithPopup, 
   signOut, 
-  onAuthStateChanged 
+  onAuthStateChanged,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword
 } from 'firebase/auth';
 import { 
   doc, 
@@ -64,6 +66,8 @@ interface FirebaseContextType {
   authLoading: boolean;
   profileLoading: boolean;
   loginWithGoogle: () => Promise<void>;
+  loginWithEmail: (email: string, password: string) => Promise<void>;
+  signUpWithEmail: (email: string, password: string) => Promise<void>;
   logoutUser: () => Promise<void>;
   updateGuestProfile: (name: string, room: string) => Promise<void>;
   toggleFavorite: (buildingId: number) => Promise<void>;
@@ -144,6 +148,27 @@ export function FirebaseProvider({ children }: { children: React.ReactNode }) {
       await signInWithPopup(auth, googleProvider);
     } catch (err) {
       console.error("Google authentication failed", err);
+      throw err;
+    }
+  };
+
+  // Email and Password Sign-In helper
+  const loginWithEmail = async (email: string, password: string) => {
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+    } catch (err) {
+      console.error("Email authentication failed", err);
+      throw err;
+    }
+  };
+
+  // Email and Password Sign-Up helper
+  const signUpWithEmail = async (email: string, password: string) => {
+    try {
+      await createUserWithEmailAndPassword(auth, email, password);
+    } catch (err) {
+      console.error("Email registration failed", err);
+      throw err;
     }
   };
 
@@ -392,6 +417,8 @@ export function FirebaseProvider({ children }: { children: React.ReactNode }) {
       authLoading,
       profileLoading,
       loginWithGoogle,
+      loginWithEmail,
+      signUpWithEmail,
       logoutUser,
       updateGuestProfile,
       toggleFavorite,

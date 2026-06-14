@@ -20,6 +20,7 @@ import { getHaversineDistance, getBearing, getCoordinatesFromOffsets, formatDist
 import ResortMap from './components/ResortMap';
 import { useFirebase } from './context/FirebaseContext';
 import AdminPanel from './components/AdminPanel';
+import AdminLoginModal from './components/AdminLoginModal';
 
 // Default center coordinates bounds directly to Charmillion Resorts (Nabq Bay, Sharm El Sheikh, Egypt)
 const DEFAULT_CENTER = {
@@ -43,6 +44,7 @@ export default function App() {
   // Admin draft previews state for local interactive verification before saving to Firestore
   const [adminDraftPlaces, setAdminDraftPlaces] = useState<Building[] | null>(null);
   const [isAdminModeActive, setIsAdminModeActive] = useState(false);
+  const [isAdminLoginModalOpen, setIsAdminLoginModalOpen] = useState(false);
 
   // Active places list
   const activeBuildings = useMemo(() => {
@@ -439,8 +441,8 @@ export default function App() {
           {/* User Sign In and Admin Switcher */}
           {!user ? (
             <button
-              onClick={loginWithGoogle}
-              className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-amber-500 text-slate-950 font-black text-[11px] hover:bg-amber-400 transition shadow"
+              onClick={() => setIsAdminLoginModalOpen(true)}
+              className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-amber-500 text-slate-950 font-black text-[11px] hover:bg-amber-400 transition shadow inline-flex"
             >
               <span>🔑 {lang === 'ar' ? 'دخول المدير' : 'Admin Login'}</span>
             </button>
@@ -1005,6 +1007,13 @@ export default function App() {
           }
         </p>
       </footer>
+
+      {/* ADMIN CONNECTION ASSISTANT DIALOG / FALLBACK LOGIN */}
+      <AdminLoginModal 
+        isOpen={isAdminLoginModalOpen} 
+        onClose={() => setIsAdminLoginModalOpen(false)} 
+        lang={lang} 
+      />
     </div>
   );
 }
