@@ -81,6 +81,9 @@ interface FirebaseContextType {
   isAdmin: boolean;
   addOrEditPlace: (place: Building) => Promise<void>;
   deletePlace: (id: number) => Promise<void>;
+  mapBgImage: string | null;
+  mapBgOpacity: number;
+  saveMapBgSettings: (bgImage: string | null, bgOpacity: number) => Promise<void>;
 }
 
 const FirebaseContext = createContext<FirebaseContextType | undefined>(undefined);
@@ -93,6 +96,14 @@ export function FirebaseProvider({ children }: { children: React.ReactNode }) {
   const [activeTips, setActiveTips] = useState<BuildingTip[]>([]);
   const [sessionsHistory, setSessionsHistory] = useState<NavigationSession[]>([]);
   const [customPlaces, setCustomPlaces] = useState<Building[]>([]);
+
+  const [mapBgImage, setMapBgImage] = useState<string | null>(() => {
+    return localStorage.getItem('resort_map_bg_image') || null;
+  });
+  const [mapBgOpacity, setMapBgOpacity] = useState<number>(() => {
+    const saved = localStorage.getItem('resort_map_bg_opacity');
+    return saved !== null ? parseFloat(saved) : 0.6;
+  });
 
   // Monitor Authentication state
   useEffect(() => {
@@ -347,9 +358,29 @@ export function FirebaseProvider({ children }: { children: React.ReactNode }) {
     const qPath = 'places';
     const unsubscribe = onSnapshot(collection(db, qPath), (snapshot) => {
       const list: Building[] = [];
+      let hasSettingsDoc = false;
       snapshot.forEach((doc) => {
-        list.push(doc.data() as Building);
+        const data = doc.data();
+        if (doc.id === 'map_bg_settings' || data.isMapSettings) {
+          hasSettingsDoc = true;
+          if (data.bgImage) {
+            setMapBgImage(data.bgImage);
+            localStorage.setItem('resort_map_bg_image', data.bgImage);
+          } else {
+            setMapBgImage(null);
+            localStorage.removeItem('resort_map_bg_image');
+          }
+          if (data.bgOpacity !== undefined) {
+            setMapBgOpacity(data.bgOpacity);
+            localStorage.setItem('resort_map_bg_opacity', data.bgOpacity.toString());
+          }
+        } else {
+          list.push(data as Building);
+        }
       });
+      if (!hasSettingsDoc) {
+        // If snapshot came back and settings document wasn't found, keep state or fallback
+      }
       setCustomPlaces(list);
     }, (error) => {
       console.warn("Could not read custom places from Firestore. Using static assets.", error);
@@ -422,6 +453,35 @@ export function FirebaseProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const saveMapBgSettings = async (image: string | null, opacity: number) => {
+    try {
+      const docRef = doc(db, 'places', 'map_bg_settings');
+      if (image === null) {
+        await setDoc(docRef, {
+          id: -999,
+          isMapSettings: true,
+          bgImage: null,
+          bgOpacity: opacity
+        });
+        setMapBgImage(null);
+        localStorage.removeItem('resort_map_bg_image');
+      } else {
+        await setDoc(docRef, {
+          id: -999,
+          isMapSettings: true,
+          bgImage: image,
+          bgOpacity: opacity
+        });
+        setMapBgImage(image);
+        localStorage.setItem('resort_map_bg_image', image);
+      }
+      setMapBgOpacity(opacity);
+      localStorage.setItem('resort_map_bg_opacity', opacity.toString());
+    } catch (err) {
+      handleFirestoreError(err, OperationType.WRITE, 'places/map_bg_settings');
+    }
+  };
+
   return (
     <FirebaseContext.Provider value={{
       user,
@@ -443,7 +503,10 @@ export function FirebaseProvider({ children }: { children: React.ReactNode }) {
       buildings: buildingsListCombined,
       isAdmin: isAdminUser,
       addOrEditPlace,
-      deletePlace
+      deletePlace,
+      mapBgImage,
+      mapBgOpacity,
+      saveMapBgSettings
     }}>
       {children}
     </FirebaseContext.Provider>

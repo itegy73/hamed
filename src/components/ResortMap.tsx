@@ -1,6 +1,7 @@
 import React, { useMemo, useState, useRef } from 'react';
 import { MapPin, Compass, Search, Navigation, Info, HelpCircle } from 'lucide-react';
 import { Building } from '../data/buildings';
+import { useFirebase } from '../context/FirebaseContext';
 
 interface ResortMapProps {
   buildings: Building[];
@@ -36,14 +37,7 @@ export default function ResortMap({
   const [draggingId, setDraggingId] = useState<number | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Custom background map JPG state
-  const [bgImage, setBgImage] = useState<string | null>(() => {
-    return localStorage.getItem('resort_map_bg_image') || null;
-  });
-  const [bgOpacity, setBgOpacity] = useState<number>(() => {
-    const saved = localStorage.getItem('resort_map_bg_opacity');
-    return saved !== null ? parseFloat(saved) : 0.6;
-  });
+  const { mapBgImage, mapBgOpacity, saveMapBgSettings } = useFirebase();
 
   // Set of ID numbers that match current filter/search to keep lookup fast
   const filteredIdsSet = useMemo(() => new Set(filteredBuildings.map(b => b.id)), [filteredBuildings]);
@@ -125,33 +119,61 @@ export default function ResortMap({
   const handleBgImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      if (file.size > 1.5 * 1024 * 1024) {
-        alert(lang === 'ar' 
-          ? 'ملحوظة تنبيهية: حجم الصورة كبير، سيتم تفعيلها في الجلسة الحالية ولكن قد لا تحفظ بشكل دائم لتجنب ذاكرة المتصفح الممتلئة.' 
-          : 'Note: File size is large. Image will be active for current session but might not persist in browser storage due to size limits.');
-      }
       const reader = new FileReader();
       reader.onloadend = () => {
-        const dataUrl = reader.result as string;
-        setBgImage(dataUrl);
-        try {
-          localStorage.setItem('resort_map_bg_image', dataUrl);
-        } catch (err) {
-          console.warn("LocalStorage storage quota exceeded, keeping in active memory only.");
-        }
+        const img = new Image();
+        img.onload = async () => {
+          // Downscale to max dimension of 1200px to guarantee safe Firestore storage limit
+          const maxDim = 1200;
+          let width = img.width;
+          let height = img.height;
+          if (width > maxDim || height > maxDim) {
+            if (width > height) {
+              height = Math.round((height * maxDim) / width);
+              width = maxDim;
+            } else {
+              width = Math.round((width * maxDim) / height);
+              height = maxDim;
+            }
+          }
+
+          const canvas = document.createElement('canvas');
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          if (ctx) {
+            ctx.drawImage(img, 0, 0, width, height);
+            // Save as JPEG with high compression (0.55) to stay well under 1MB
+            const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.55);
+            try {
+              await saveMapBgSettings(compressedDataUrl, mapBgOpacity);
+            } catch (err: any) {
+              alert(lang === 'ar' 
+                ? `خطأ أثناء حفظ صورة الخلفية: ${err?.message || err}`
+                : `Error saving background map: ${err?.message || err}`);
+            }
+          }
+        };
+        img.src = reader.result as string;
       };
       reader.readAsDataURL(file);
     }
   };
 
-  const handleOpacityChange = (value: number) => {
-    setBgOpacity(value);
-    localStorage.setItem('resort_map_bg_opacity', value.toString());
+  const handleOpacityChange = async (value: number) => {
+    try {
+      await saveMapBgSettings(mapBgImage, value);
+    } catch (err) {
+      console.error(err);
+    }
   };
 
-  const handleClearBgImage = () => {
-    setBgImage(null);
-    localStorage.removeItem('resort_map_bg_image');
+  const handleClearBgImage = async () => {
+    try {
+      await saveMapBgSettings(null, mapBgOpacity);
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   return (
@@ -211,18 +233,18 @@ export default function ResortMap({
         <div className="absolute inset-0 bg-[radial-gradient(rgba(245,158,11,0.06)_1px,transparent_1px)] [background-size:24px_24px] pointer-events-none" />
         
         {/* Custom JPG Background layer image */}
-        {bgImage && (
+        {mapBgImage && (
           <img 
-            src={bgImage} 
+            src={mapBgImage} 
             alt="Resort Background Map" 
             referrerPolicy="no-referrer"
             className="absolute inset-0 w-full h-full object-cover pointer-events-none transition-opacity duration-200"
-            style={{ opacity: bgOpacity }}
+            style={{ opacity: mapBgOpacity }}
           />
         )}
 
         {/* Red Sea beaches boundary (Eastern Coastline is East/Right-hand side of coordinates) */}
-        {!bgImage && (
+        {!mapBgImage && (
           <div className="absolute top-0 right-0 h-full w-[15%] bg-blue-500/5 border-l border-blue-500/10 flex items-center justify-center p-2 text-center select-none pointer-events-none">
             <div className="origin-center rotate-90 whitespace-nowrap text-[9px] uppercase tracking-widest font-black text-blue-500/40 font-mono">
               {lang === 'ar' ? 'البحر الأحمر - خليج نبق' : 'Red Sea - Nabq Bay'}
@@ -231,7 +253,7 @@ export default function ResortMap({
         )}
 
         {/* Resort boundary zones subtle outline frames to give architectural perspective */}
-        {!bgImage && (
+        {!mapBgImage && (
           <>
             {/* 1. Club Resort boundary (Top-Right / North-East) */}
             <div className="absolute top-3 right-[18%] w-[33%] h-[40%] rounded-xl border border-dashed border-emerald-500/10 pointer-events-none flex items-center justify-center">
@@ -407,7 +429,7 @@ export default function ResortMap({
                   📁 {lang === 'ar' ? 'تحميل صورة الخريطة' : 'Upload Map JPG'}
                 </label>
 
-                {bgImage && (
+                {mapBgImage && (
                   <button
                     type="button"
                     onClick={handleClearBgImage}
@@ -422,7 +444,7 @@ export default function ResortMap({
             {/* Opacity slider */}
             <div className="space-y-1.5 text-right flex flex-col justify-end">
               <div className="flex items-center justify-between text-[10px] text-slate-300 font-sans">
-                <span className="font-mono text-amber-400 font-bold">{Math.round(bgOpacity * 100)}%</span>
+                <span className="font-mono text-amber-400 font-bold">{Math.round(mapBgOpacity * 100)}%</span>
                 <span className="font-black">نسبة شفافية الصورة الخلفية:</span>
               </div>
               <input 
@@ -430,7 +452,7 @@ export default function ResortMap({
                 min="0" 
                 max="1" 
                 step="0.05" 
-                value={bgOpacity}
+                value={mapBgOpacity}
                 onChange={(e) => handleOpacityChange(parseFloat(e.target.value))}
                 className="w-full h-1 bg-slate-900 accent-amber-500 rounded-lg appearance-none cursor-pointer"
               />

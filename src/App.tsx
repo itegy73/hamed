@@ -555,7 +555,24 @@ export default function App() {
                 draftPlaces={adminDraftPlaces}
                 onClearDrafts={() => setAdminDraftPlaces(null)}
                 onPublishAllDrafts={async (drafts) => {
-                  for (const p of drafts) {
+                  const modified = drafts.filter(draft => {
+                    const original = firebaseBuildings.find(b => b.id === draft.id);
+                    if (!original) return true;
+                    return (
+                      original.offsetX !== draft.offsetX ||
+                      original.offsetY !== draft.offsetY ||
+                      original.nameAr !== draft.nameAr ||
+                      original.nameEn !== draft.nameEn ||
+                      original.descriptionAr !== draft.descriptionAr ||
+                      original.descriptionEn !== draft.descriptionEn ||
+                      original.type !== draft.type ||
+                      original.resort !== draft.resort ||
+                      original.hoursAr !== draft.hoursAr ||
+                      original.hoursEn !== draft.hoursEn
+                    );
+                  });
+
+                  for (const p of modified) {
                     await addOrEditPlace(p);
                   }
                   setAdminDraftPlaces(null);
