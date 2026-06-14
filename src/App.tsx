@@ -11,7 +11,9 @@ import {
   Navigation,
   Globe,
   Sliders,
-  RotateCcw
+  RotateCcw,
+  Search,
+  X
 } from 'lucide-react';
 import { BUILDINGS, Building } from './data/buildings';
 import { getHaversineDistance, getBearing, getCoordinatesFromOffsets, formatDistance } from './utils/geo';
@@ -30,6 +32,10 @@ export default function App() {
   const [isNavigating, setIsNavigating] = useState(false);
   const [reachedTarget, setReachedTarget] = useState(false);
   const [gpsError, setGpsError] = useState<string | null>(null);
+
+  // Search & Categorization states
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState<'all' | 'club' | 'life' | 'gardens' | 'general'>('all');
 
   // GPS Coordinates and bearing tracker states
   const [currentCoords, setCurrentCoords] = useState<{ lat: number; lon: number } | null>(null);
@@ -168,6 +174,25 @@ export default function App() {
     );
     return distanceToResort < 12000; // 12 kilometers threshold
   }, [currentCoords]);
+
+  // Filter buildings list based on search and category tab
+  const filteredBuildings = useMemo(() => {
+    return BUILDINGS.filter(b => {
+      // Category filter
+      if (selectedCategory !== 'all' && b.resort !== selectedCategory) {
+        return false;
+      }
+      // Search query filter
+      if (searchQuery.trim() !== '') {
+        const q = searchQuery.toLowerCase().trim();
+        const matchesAr = b.nameAr.toLowerCase().includes(q) || (b.descriptionAr && b.descriptionAr.toLowerCase().includes(q));
+        const matchesEn = b.nameEn.toLowerCase().includes(q) || (b.descriptionEn && b.descriptionEn.toLowerCase().includes(q));
+        const matchesId = b.id.toString().includes(q);
+        return matchesAr || matchesEn || matchesId;
+      }
+      return true;
+    });
+  }, [selectedCategory, searchQuery]);
 
   // --- Dynamic calculations of targets coordinates based on User GPS ---
   const activeSelectedBuildingCoords = useMemo(() => {
@@ -423,67 +448,132 @@ export default function App() {
               </div>
             </div>
 
-            {/* THE MINIMAL SELECTOR PANEL */}
-            <div className="bg-slate-900 border border-slate-800/80 rounded-3xl p-6 space-y-4 shadow-xl">
-              <div className="space-y-2">
+            {/* THE PROFESSIONAL CATEGORIZED & SEARCHABLE SELECTOR PANEL */}
+            <div className="bg-slate-900 border border-slate-800/85 rounded-3xl p-5 md:p-6 space-y-5 shadow-2xl relative">
+              
+              {/* SEARCH FIELD WITH A LENS / GLASSES ICON DESIGN */}
+              <div className="space-y-1.5">
                 <label className="text-xs font-bold text-slate-300 block">
-                  {lang === 'ar' ? 'اختر المكان المقصود:' : 'Select Destination Spot:'}
+                  {lang === 'ar' ? 'البحث السريع عن مكان أو رقم مبنى:' : 'Fast Search for Spot or Building:'}
                 </label>
-
-                {/* THE PROFESSIONAL Div/GROUPED DROP-DOWN MENU */}
                 <div className="relative">
-                  <select
-                    id="destination-selector"
-                    value={selectedBuilding?.id || ''}
-                    onChange={(e) => {
-                      const bId = parseInt(e.target.value);
-                      const found = BUILDINGS.find(b => b.id === bId);
-                      setSelectedBuilding(found || null);
-                    }}
-                    className="w-full bg-slate-950 border-2 border-slate-800 text-slate-100 hover:border-slate-700 focus:border-amber-500 focus:outline-none rounded-2xl p-4 text-xs sm:text-sm font-bold text-right transition cursor-pointer appearance-none"
-                    style={{ direction: 'rtl' }}
-                  >
-                    <option value="">
-                      {lang === 'ar' ? '-- اختر مكاناً للبدء --' : '-- Choose a location --'}
-                    </option>
-                    
-                    <optgroup label={lang === 'ar' ? "كلوب ريزورت (مباني الغرف)" : "Club Resort Rooms"}>
-                      {BUILDINGS.filter(b => b.resort === 'club').map(b => (
-                        <option key={b.id} value={b.id}>
-                          {b.nameAr} (#{b.id})
-                        </option>
-                      ))}
-                    </optgroup>
-
-                    <optgroup label={lang === 'ar' ? "سي لايف ريزورت (مباني الغرف)" : "Sea Life Rooms"}>
-                      {BUILDINGS.filter(b => b.resort === 'life').map(b => (
-                        <option key={b.id} value={b.id}>
-                          {b.nameAr} (#{b.id})
-                        </option>
-                      ))}
-                    </optgroup>
-
-                    <optgroup label={lang === 'ar' ? "جاردنز ريزورت وأكوابارك (مباني الغرف)" : "Gardens Aqua Park Rooms"}>
-                      {BUILDINGS.filter(b => b.resort === 'gardens').map(b => (
-                        <option key={b.id} value={b.id}>
-                          {b.nameAr} (#{b.id})
-                        </option>
-                      ))}
-                    </optgroup>
-
-                    <optgroup label={lang === 'ar' ? "المرافق العامة والألعاب المشتركة" : "Resort General Services"}>
-                      {BUILDINGS.filter(b => b.resort === 'general').map(b => (
-                        <option key={b.id} value={b.id}>
-                          {b.nameAr}
-                        </option>
-                      ))}
-                    </optgroup>
-                  </select>
-                  
-                  {/* Custom arrow indicator inside selection box */}
-                  <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none text-[10px]">
-                    ▼
+                  <div className="absolute inset-y-0 right-4 flex items-center pointer-events-none text-amber-500/80">
+                    <Search className="w-5 h-5" />
                   </div>
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder={lang === 'ar' ? 'اكتب اسم المكان، الرقم أو المرفق...' : 'Type building name, ID or services...'}
+                    className="w-full bg-slate-950 border-2 border-slate-800 focus:border-amber-500 text-slate-100 rounded-2xl py-3.5 pr-11 pl-10 text-xs sm:text-sm font-bold text-right focus:outline-none transition-all duration-200 shadow-inner"
+                  />
+                  {searchQuery && (
+                    <button
+                      type="button"
+                      onClick={() => setSearchQuery('')}
+                      className="absolute inset-y-0 left-3 flex items-center justify-center px-1 text-slate-400 hover:text-white transition"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* CATEGORY TABS SELECTOR */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-slate-300 block">
+                  {lang === 'ar' ? 'تصنيف الأماكن بالمجمع:' : 'Resort Categories:'}
+                </label>
+                
+                {/* Horizontal scrolling or grid wrap for categories */}
+                <div className="grid grid-cols-2 xs:grid-cols-3 sm:flex sm:flex-wrap gap-2 text-right">
+                  {[
+                    { id: 'all', labelAr: 'الكل 🌐', labelEn: 'All' },
+                    { id: 'club', labelAr: 'كلوب 🏨', labelEn: 'Club Resort' },
+                    { id: 'life', labelAr: 'سي لايف 🌊', labelEn: 'Sea Life' },
+                    { id: 'gardens', labelAr: 'جاردنز 🍃', labelEn: 'Gardens' },
+                    { id: 'general', labelAr: 'مرافق عامة 🍽️', labelEn: 'Services' }
+                  ].map((category) => {
+                    const isActive = selectedCategory === category.id;
+                    return (
+                      <button
+                        key={category.id}
+                        type="button"
+                        onClick={() => {
+                          setSelectedCategory(category.id as any);
+                        }}
+                        className={`px-3 py-2 text-[11px] font-bold rounded-xl border transition-all duration-200 capitalize ${
+                          isActive
+                            ? 'bg-amber-500 text-slate-950 border-amber-500 font-extrabold shadow-lg shadow-amber-500/20'
+                            : 'bg-slate-950 text-slate-400 border-slate-800 hover:bg-slate-850 hover:text-slate-200'
+                        }`}
+                      >
+                        {lang === 'ar' ? category.labelAr : category.labelEn}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* LISTING THE CATEGORIZED PLACES */}
+              <div className="space-y-1.5">
+                <div className="flex justify-between items-center text-xs font-bold text-slate-400">
+                  <span>
+                    {lang === 'ar' 
+                      ? `وجدنا (${filteredBuildings.length}) مكاناً` 
+                      : `Found (${filteredBuildings.length}) spots`}
+                  </span>
+                  <span>
+                    {lang === 'ar' ? 'اضغط لاختيار مكان تود الذهاب إليه:' : 'Click to select destination:'}
+                  </span>
+                </div>
+
+                {/* SCROLLABLE GRID CONTAINER FOR PLACES */}
+                <div className="bg-slate-950 border border-slate-850 rounded-2xl max-h-[260px] overflow-y-auto p-2 space-y-1.5 custom-scrollbar">
+                  {filteredBuildings.length > 0 ? (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      {filteredBuildings.map((building) => {
+                        const isChosen = selectedBuilding?.id === building.id;
+                        return (
+                          <button
+                            key={building.id}
+                            type="button"
+                            onClick={() => setSelectedBuilding(building)}
+                            className={`p-3 rounded-xl border text-right transition-all duration-200 flex items-center justify-between gap-2.5 cursor-pointer ${
+                              isChosen
+                                ? 'bg-amber-500/10 border-amber-500 text-amber-400 shadow-md'
+                                : 'bg-slate-900/60 border-slate-800 hover:border-slate-700 text-slate-300'
+                            }`}
+                          >
+                            {/* Left indicator or Check Circle */}
+                            <div>
+                              {isChosen ? (
+                                <CheckCircle className="w-4 h-4 text-amber-500 shrink-0" />
+                              ) : (
+                                <span className="text-[9px] font-mono text-slate-505 capitalize">
+                                  {building.resort}
+                                </span>
+                              )}
+                            </div>
+
+                            {/* Right Title Info */}
+                            <div className="flex-1 min-w-0 pr-1 text-right">
+                              <span className="text-[10px] bg-slate-950/80 px-1.5 py-0.5 rounded text-amber-400 font-bold font-mono ml-2">
+                                #{building.id}
+                              </span>
+                              <span className="text-xs font-bold truncate">
+                                {lang === 'ar' ? building.nameAr : building.nameEn}
+                              </span>
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <div className="text-center py-10 text-slate-500 text-xs">
+                      {lang === 'ar' ? 'لا يوجد نتائج تطابق بحثك الحالي.' : 'No spots matching your search.'}
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -518,7 +608,7 @@ export default function App() {
               <button
                 disabled={!selectedBuilding}
                 onClick={startWayfinding}
-                className={`w-full py-4.5 rounded-2xl font-black font-display text-sm flex items-center justify-center gap-2.5 shadow-xl transition-all duration-350 ${
+                className={`w-full py-4.5 rounded-2xl font-black font-display text-sm flex items-center justify-center gap-2.5 shadow-xl transition-all duration-300 ${
                   selectedBuilding 
                     ? 'bg-amber-500 text-slate-950 hover:bg-amber-400 shadow-amber-500/10 cursor-pointer active:scale-[0.98]' 
                     : 'bg-slate-800 text-slate-600 border border-slate-850 cursor-not-allowed'
